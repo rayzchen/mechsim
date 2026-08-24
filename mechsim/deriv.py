@@ -1,4 +1,6 @@
 class Expression:
+    context = []
+
     def __init__(self):
         pass
 
@@ -13,6 +15,12 @@ class Expression:
 
     def substitute(self, values):
         pass
+
+    def deriv(self, respect):
+        pass
+
+    def differentiate(self, respect):
+        return self.deriv(respect).substitute({})
 
 class Literal(Expression):
     def __init__(self, value):
@@ -30,6 +38,9 @@ class Literal(Expression):
     def substitute(self, values):
         return self.copy()
 
+    def deriv(self, respect):
+        return Literal(0)
+
 class Variable(Expression):
     def __init__(self, name):
         self.name = name
@@ -38,7 +49,11 @@ class Variable(Expression):
         return self.name
 
     def contains(self, name):
-        return name == self.name
+        if name == self.name:
+            return True
+        elif name == "t" and self.name.replace("dot", "") in Expression.context:
+            return True
+        return False
 
     def copy(self):
         return Variable(self.name)
@@ -47,6 +62,12 @@ class Variable(Expression):
         if self.name in values:
             return Literal(values[self.name])
         return self.copy()
+
+    def deriv(self, respect):
+        if self.name == respect:
+            return Literal(1)
+        elif respect == "t":
+            return Variable(self.name + "dot")
 
 class Power(Expression):
     def __init__(self, base, exponent):
@@ -68,6 +89,14 @@ class Power(Expression):
         if isinstance(new_base, Literal) and isinstance(new_base, Literal):
             return Literal(new_base.value ** new_exponent.value)
         return Power(new_base, new_exponent)
+
+    def deriv(self, respect):
+        if self.base.contains(respect):
+            assert isinstance(self.exponent, Literal)
+            if self.exponent.value == 2:
+                return Term(2, [self.base, self.base.deriv(respect)])
+            return Term(self.exponent.value, [Power(self.base, Literal(self.exponent.value - 1)), self.base.deriv(respect)])
+        return Literal(0)
 
 class Term(Expression):
     def __init__(self, coeff, terms):
@@ -96,10 +125,34 @@ class Term(Expression):
         for term in new_terms:
             if isinstance(term, Literal):
                 new_coeff *= term.value
-        new_terms = [term for term in new_terms if not isinstance(term, Literal)]
+            elif isinstance(term, Term):
+                new_coeff *= term.coeff
+                new_terms.extend(term.terms)
+        new_terms = [term for term in new_terms if not isinstance(term, (Literal, Term))]
         if new_coeff == 0 or len(new_terms) == 0:
             return Literal(new_coeff)
         return Term(new_coeff, new_terms)
+
+    def deriv(self, respect):
+        functions = []
+        constants = []
+        for term in self.terms:
+            if term.contains(respect):
+                functions.append(term)
+            else:
+                constants.append(term)
+        if not functions:
+            return Literal(0)
+        elif len(functions) == 1:
+            deriv = functions[0].deriv(respect)
+        elif len(functions) == 2:
+            deriv = Sum([
+                Term(1, [functions[0], functions[1].deriv(respect)]),
+                Term(1, [functions[1], functions[0].deriv(respect)])
+            ])
+        elif len(functions) > 2:
+            deriv = Term(1, [functions[0], Term(1, functions[1:])]).deriv(respect)
+        return Term(self.coeff, constants + [deriv])
 
 class Sum(Expression):
     def __init__(self, terms):
@@ -125,5 +178,31 @@ class Sum(Expression):
         if len(new_terms) == 0:
             return new_literal
         if new_literal.value == 0:
-            return Sum(new_terms)
+            if len(new_terms) == 1:
+                return new_terms[0]
+            else:
+                return Sum(new_terms)
         return Sum(new_terms + [new_literal])
+
+    def deriv(self, respect):
+        new_terms = [term.deriv(respect) for term in self.terms]
+        new_terms = [term for term in new_terms if not (isinstance(term, Literal) and term.value == 0)]
+        if not new_terms:
+            return Literal(0)
+        elif len(new_terms) == 1:
+            return new_terms[0]
+        else:
+            return Sum(new_terms)
+
+def euler_lagrange(lagrangian):
+    eqs = []
+    for variable in Expression.context:
+        term1 = lagrangian.differentiate(variable + "dot").differentiate("t")
+        term2 = lagrangian.differentiate(variable)
+        eqs.append(Sum([term1, Term(-1, [term2])]).substitute({}))
+    return eqs
+
+Expression.context = ["x"]
+lagrangian = Sum([Term(0.5, [Variable("m"), Power(Variable("xdot"), Literal(2))]), Term(-1, [Variable("m"), Variable("g"), Variable("x")])])
+for equation in euler_lagrange(lagrangian):
+    print(equation, "= 0")
