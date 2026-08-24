@@ -131,6 +131,8 @@ class Term(Expression):
         new_terms = [term for term in new_terms if not isinstance(term, (Literal, Term))]
         if new_coeff == 0 or len(new_terms) == 0:
             return Literal(new_coeff)
+        if new_coeff == 1 and len(new_terms) == 1:
+            return new_terms[0]
         return Term(new_coeff, new_terms)
 
     def deriv(self, respect):
