@@ -1,8 +1,7 @@
+import math
+
 class Expression:
     context = []
-
-    def __init__(self):
-        pass
 
     def __str__(self):
         pass
@@ -94,8 +93,8 @@ class Power(Expression):
         if self.base.contains(respect):
             assert isinstance(self.exponent, Literal)
             if self.exponent.value == 2:
-                return Term(2, [self.base, self.base.deriv(respect)])
-            return Term(self.exponent.value, [Power(self.base, Literal(self.exponent.value - 1)), self.base.deriv(respect)])
+                return Term(2, [self.base.copy(), self.base.deriv(respect)])
+            return Term(self.exponent.value, [Power(self.base.copy(), Literal(self.exponent.value - 1)), self.base.deriv(respect)])
         return Literal(0)
 
 class Term(Expression):
@@ -196,6 +195,49 @@ class Sum(Expression):
         else:
             return Sum(new_terms)
 
+class Function(Expression):
+    def __init__(self, arg, name, func, deriv_class):
+        self.arg = arg
+        self.name = name
+        self.func = func
+        self.deriv_class = deriv_class
+
+    def __str__(self):
+        return self.name + "(" + str(self.arg) + ")"
+
+    def contains(self, name):
+        return self.arg.contains(name)
+
+    def copy(self):
+        return self.__class__(self.arg)
+
+    def substitute(self, values):
+        new_arg = self.arg.substitute(values)
+        if isinstance(new_arg, Literal):
+            return Literal(self.func(new_arg.value))
+        return self.__class__(new_arg)
+
+    def deriv(self, respect):
+        if self.arg.contains(respect):
+            deriv = self.arg.deriv(respect)
+            if isinstance(deriv, Literal) and deriv.value == 1:
+                return self.deriv_class(self.arg.copy())
+            return Term(1, [self.deriv_class(self.arg.copy()), deriv])
+        return Literal(0)
+
+def negative_wrapper(cls):
+    def constructor(arg):
+        return Term(-1, [cls(arg)])
+    return constructor
+
+class Sin(Function):
+    def __init__(self, arg):
+        super(Sin, self).__init__(arg, "sin", math.sin, Cos)
+
+class Cos(Function):
+    def __init__(self, arg):
+        super(Cos, self).__init__(arg, "cos", math.cos, negative_wrapper(Sin))
+
 def euler_lagrange(lagrangian):
     eqs = []
     for variable in Expression.context:
@@ -204,7 +246,11 @@ def euler_lagrange(lagrangian):
         eqs.append(Sum([term1, Term(-1, [term2])]).substitute({}))
     return eqs
 
-Expression.context = ["x"]
-lagrangian = Sum([Term(0.5, [Variable("m"), Power(Variable("xdot"), Literal(2))]), Term(-1, [Variable("m"), Variable("g"), Variable("x")])])
-for equation in euler_lagrange(lagrangian):
-    print(equation, "= 0")
+Expression.context = ["theta"]
+lagrangian = Sum([
+    Term(0.5, [Variable("m"), Power(Variable("l"), Literal(2)), Power(Variable("thetadot"), Literal(2))]),
+    Term(-1, [Variable("m"), Variable("g"), Variable("l")]),
+    Term(1, [Variable("m"), Variable("g"), Variable("l"), Cos(Variable("theta"))])
+])
+print("Lagrangian: L =", lagrangian)
+print(euler_lagrange(lagrangian)[0], "= 0")
