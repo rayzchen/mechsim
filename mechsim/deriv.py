@@ -1,5 +1,6 @@
 import math
 import itertools
+import numpy as np
 
 class Expression:
     context = []
@@ -304,25 +305,51 @@ def euler_lagrange(lagrangian):
         eqs.append(Sum([term1, Term(-1, [term2])]).substitute({}))
     return eqs
 
+def solve(equations, values):
+    rank = len(Expression.context)
+    coeffs = np.zeros((rank, rank))
+    constants = np.zeros((rank,))
+    indices = {variable + "dotdot": i for i, variable in enumerate(Expression.context)}
+    for i, eq in enumerate(equations):
+        eq = eq.substitute(values)
+        assert isinstance(eq, Sum)
+        for term in eq.terms:
+            if isinstance(term, Term):
+                variable = term.terms[0]
+                coeffs[i, indices[variable.name]] += term.coeff
+            elif isinstance(term, Literal):
+                constants[i] -= term.value
+
+    return np.matmul(np.linalg.inv(coeffs), constants).tolist()
+
 Expression.context = ["theta1", "theta2"]
 x2 = Sum([
-    Term(1, [Variable("l"), Sin(Variable("theta1"))]),
-    Term(1, [Variable("l"), Sin(Variable("theta2"))])
+    Term(1, [Variable("r1"), Sin(Variable("theta1"))]),
+    Term(1, [Variable("r2"), Sin(Variable("theta2"))])
 ])
 y2 = Sum([
-    Term(1, [Variable("l"), Cos(Variable("theta1"))]),
-    Term(1, [Variable("l"), Cos(Variable("theta2"))])
+    Term(1, [Variable("r1"), Cos(Variable("theta1"))]),
+    Term(1, [Variable("r2"), Cos(Variable("theta2"))])
 ])
 kinetic = Sum([
-    Term(0.5, [Power(x2.differentiate("t"), Literal(2))]),
-    Term(0.5, [Power(y2.differentiate("t"), Literal(2))]),
+    Term(0.5, [Variable("m1"), Power(Variable("r1"), Literal(2)), Power(Variable("theta1dot"), Literal(2))]),
+    Term(0.5, [Variable("m2"), Power(x2.differentiate("t"), Literal(2))]),
+    Term(0.5, [Variable("m2"), Power(y2.differentiate("t"), Literal(2))])
 ])
 potential = Sum([
-    Term(1, [Variable("m"), Variable("g"), Variable("l"), Cos(Variable("theta1"))]),
-    Term(1, [Variable("m"), Variable("g"), y2]),
+    Term(-1, [Variable("m1"), Variable("g"), Variable("r1"), Cos(Variable("theta1"))]),
+    Term(-1, [Variable("m2"), Variable("g"), y2]),
 ])
 lagrangian = Sum([
     kinetic,
     Term(-1, [potential])
 ])
-print(lagrangian.substitute({}))
+
+lagrangian = lagrangian.substitute({
+    "m1": 1, "m2": 1,
+    "g": 10,
+    "r1": 0.5, "r2": 0.5,
+})
+equations = euler_lagrange(lagrangian)
+for eq in equations:
+    print(eq, "= 0")
