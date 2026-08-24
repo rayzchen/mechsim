@@ -17,6 +17,9 @@ class Expression:
     def substitute(self, values):
         pass
 
+    def evaluate(self, values):
+        pass
+
     def deriv(self, respect):
         pass
 
@@ -38,6 +41,9 @@ class Literal(Expression):
 
     def substitute(self, values):
         return self.copy()
+
+    def evaluate(self, values):
+        return self.value
 
     def deriv(self, respect):
         return Literal(0)
@@ -63,6 +69,9 @@ class Variable(Expression):
         if self.name in values:
             return Literal(values[self.name])
         return self.copy()
+
+    def evaluate(self, values):
+        return values[self.name]
 
     def deriv(self, respect):
         if self.name == respect:
@@ -99,6 +108,9 @@ class Power(Expression):
         if self.exponent.value == 0:
             return Literal(1)
         return Power(new_base, self.exponent)
+
+    def evaluate(self, values):
+        return self.base.evaluate(values) ** self.exponent.evaluate(values)
 
     def deriv(self, respect):
         if self.base.contains(respect):
@@ -190,6 +202,12 @@ class Term(Expression):
             new_terms = prefix + new_terms
         return Term(new_coeff, new_terms)
 
+    def evaluate(self, values):
+        result = self.coeff
+        for term in self.terms:
+            result *= term.evaluate(values)
+        return result
+
     def deriv(self, respect):
         functions = []
         constants = []
@@ -244,6 +262,12 @@ class Sum(Expression):
         new_terms.append(new_literal)
         return Sum(new_terms)
 
+    def evaluate(self, values):
+        result = 0
+        for term in self.terms:
+            result += term.evaluate(values)
+        return result
+
     def deriv(self, respect):
         new_terms = [term.deriv(respect) for term in self.terms]
         new_terms = [term for term in new_terms if not (isinstance(term, Literal) and term.value == 0)]
@@ -276,6 +300,9 @@ class Function(Expression):
             return Literal(self.func(new_arg.value))
         return self.__class__(new_arg)
 
+    def evaluate(self, values):
+        return self.func(self.arg.evaluate(values))
+
     def deriv(self, respect):
         if self.arg.contains(respect):
             deriv = self.arg.deriv(respect)
@@ -297,30 +324,45 @@ class Cos(Function):
     def __init__(self, arg):
         super(Cos, self).__init__(arg, "cos", math.cos, negative_wrapper(Sin))
 
+def split_variable(term):
+    if not isinstance(term, Term):
+        return None, term
+    for subterm in term.terms:
+        if isinstance(subterm, Variable) and subterm.name.endswith("dotdot"):
+            newterms = term.terms.copy()
+            newterms.remove(subterm)
+            if not newterms:
+                return subterm.name, Literal(term.coeff)
+            return subterm.name, Term(term.coeff, newterms)
+    return None, term
+
 def euler_lagrange(lagrangian):
     eqs = []
     for variable in Expression.context:
         term1 = lagrangian.differentiate(variable + "dot").differentiate("t")
         term2 = lagrangian.differentiate(variable)
-        eqs.append(Sum([term1, Term(-1, [term2])]).substitute({}))
+        eq = Sum([term1, Term(-1, [term2])]).substitute({})
+
+        coeffs = {variable + "dotdot": [] for variable in Expression.context}
+        coeffs[None] = []
+        for term in eq.terms:
+            name, term = split_variable(term)
+            coeffs[name].append(term)
+        for name in coeffs:
+            coeffs[name] = Sum(coeffs[name]).substitute({})
+        eqs.append(coeffs)
     return eqs
 
 def solve(equations, values):
     rank = len(Expression.context)
-    coeffs = np.zeros((rank, rank))
+    matrix = np.zeros((rank, rank))
     constants = np.zeros((rank,))
-    indices = {variable + "dotdot": i for i, variable in enumerate(Expression.context)}
-    for i, eq in enumerate(equations):
-        eq = eq.substitute(values)
-        assert isinstance(eq, Sum)
-        for term in eq.terms:
-            if isinstance(term, Term):
-                variable = term.terms[0]
-                coeffs[i, indices[variable.name]] += term.coeff
-            elif isinstance(term, Literal):
-                constants[i] -= term.value
+    for i, coeffs in enumerate(equations):
+        for j, variable in enumerate(Expression.context):
+            matrix[i, j] = coeffs[variable + "dotdot"].evaluate(values)
+        constants[i] = -coeffs[None].evaluate(values)
 
-    return np.matmul(np.linalg.inv(coeffs), constants).tolist()
+    return np.linalg.solve(matrix, constants).tolist()
 
 Expression.context = ["theta1", "theta2"]
 x2 = Sum([
@@ -352,4 +394,4 @@ lagrangian = lagrangian.substitute({
 })
 equations = euler_lagrange(lagrangian)
 for eq in equations:
-    print(eq, "= 0")
+    print(" + ".join(str(coeff) + (name if name else "") for name, coeff in eq.items()), "= 0")
