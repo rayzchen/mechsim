@@ -86,10 +86,10 @@ class Power(Expression):
     def substitute(self, values):
         assert isinstance(self.exponent, Literal)
         if isinstance(self.base, Sum):
-            return Term(1, [self.base] * self.exponent.value).substitute(values)
+            return Term(1, [self.base.copy()] * self.exponent.value).substitute(values)
         elif isinstance(self.base, Term):
             new_coeff = self.base.coeff ** self.exponent.value
-            new_terms = [Power(term, self.exponent.copy()) for term in self.terms]
+            new_terms = [Power(term, self.exponent.copy()) for term in self.base.terms]
             return Term(new_coeff, new_terms).substitute(values)
 
         new_base = self.base.substitute(values)
@@ -129,25 +129,9 @@ class Term(Expression):
         return Term(self.coeff, [term.copy() for term in self.terms])
 
     def substitute(self, values):
-        sums = []
-        for term in self.terms:
-            if isinstance(term, Sum):
-                sums.append(term)
-
-        if sums:
-            factors = [term for term in self.terms if not isinstance(term, Sum)]
-            if factors:
-                factors_term = Term(1, factors).substitute(values)
-            else:
-                factors_term = Literal(1)
-            axes = [term.terms for term in sums]
-            new_terms = []
-            for product in itertools.product(*axes):
-                new_terms.append(Term(1, [factors_term.copy()] + list(product)))
-            return Sum(new_terms).substitute(values)
-
         new_terms = [term.substitute(values) for term in self.terms]
         new_coeff = self.coeff
+        sums = []
         variables = []
         for term in new_terms:
             if isinstance(term, Literal):
@@ -160,12 +144,26 @@ class Term(Expression):
             elif isinstance(term, Power):
                 if isinstance(term.base, Variable):
                     variables.append(term)
+            if isinstance(term, Sum):
+                sums.append(term)
 
         new_terms = [term for term in new_terms if not isinstance(term, (Literal, Term))]
         if new_coeff == 0 or len(new_terms) == 0:
             return Literal(new_coeff)
         if new_coeff == 1 and len(new_terms) == 1:
             return new_terms[0]
+
+        if sums:
+            factors = [term for term in new_terms if not isinstance(term, Sum)]
+            if factors:
+                factors_term = Term(1, factors).substitute(values)
+            else:
+                factors_term = Literal(1)
+            axes = [term.terms for term in sums]
+            new_terms = []
+            for product in itertools.product(*axes):
+                new_terms.append(Term(new_coeff, [factors_term.copy()] + list(product)))
+            return Sum(new_terms).substitute(values)
 
         if variables:
             new_terms = [term for term in new_terms if term not in variables]
@@ -224,7 +222,7 @@ class Sum(Expression):
         return any(term.contains(name) for term in self.terms)
 
     def copy(self):
-        return Term([term.copy() for term in self.terms])
+        return Sum([term.copy() for term in self.terms])
 
     def substitute(self, values):
         new_terms = [term.substitute(values) for term in self.terms]
