@@ -1,4 +1,5 @@
 import math
+import itertools
 
 class Expression:
     context = []
@@ -83,11 +84,20 @@ class Power(Expression):
         return Power(self.base.copy(), self.exponent.copy())
 
     def substitute(self, values):
+        assert isinstance(self.exponent, Literal)
+        if isinstance(self.base, Sum):
+            return Term(1, [self.base] * self.exponent.value).substitute(values)
+        elif isinstance(self.base, Term):
+            new_coeff = self.base.coeff ** self.exponent.value
+            new_terms = [Power(term, self.exponent.copy()) for term in self.terms]
+            return Term(new_coeff, new_terms).substitute(values)
+
         new_base = self.base.substitute(values)
-        new_exponent = self.exponent.substitute(values)
-        if isinstance(new_base, Literal) and isinstance(new_base, Literal):
-            return Literal(new_base.value ** new_exponent.value)
-        return Power(new_base, new_exponent)
+        if isinstance(new_base, Literal):
+            return Literal(new_base.value ** self.exponent.value)
+        if self.exponent.value == 0:
+            return Literal(1)
+        return Power(new_base, self.exponent)
 
     def deriv(self, respect):
         if self.base.contains(respect):
@@ -119,19 +129,66 @@ class Term(Expression):
         return Term(self.coeff, [term.copy() for term in self.terms])
 
     def substitute(self, values):
+        sums = []
+        for term in self.terms:
+            if isinstance(term, Sum):
+                sums.append(term)
+
+        if sums:
+            factors = [term for term in self.terms if not isinstance(term, Sum)]
+            if factors:
+                factors_term = Term(1, factors).substitute(values)
+            else:
+                factors_term = Literal(1)
+            axes = [term.terms for term in sums]
+            new_terms = []
+            for product in itertools.product(*axes):
+                new_terms.append(Term(1, [factors_term.copy()] + list(product)))
+            return Sum(new_terms).substitute(values)
+
         new_terms = [term.substitute(values) for term in self.terms]
         new_coeff = self.coeff
+        variables = []
         for term in new_terms:
             if isinstance(term, Literal):
                 new_coeff *= term.value
             elif isinstance(term, Term):
                 new_coeff *= term.coeff
                 new_terms.extend(term.terms)
+            elif isinstance(term, Variable):
+                variables.append(term)
+            elif isinstance(term, Power):
+                if isinstance(term.base, Variable):
+                    variables.append(term)
+
         new_terms = [term for term in new_terms if not isinstance(term, (Literal, Term))]
         if new_coeff == 0 or len(new_terms) == 0:
             return Literal(new_coeff)
         if new_coeff == 1 and len(new_terms) == 1:
             return new_terms[0]
+
+        if variables:
+            new_terms = [term for term in new_terms if term not in variables]
+            powers = {}
+            for term in variables:
+                if isinstance(term, Variable):
+                    if term.name not in powers:
+                        powers[term.name] = 1
+                    else:
+                        powers[term.name] += 1
+                elif isinstance(term, Power):
+                    assert isinstance(term.exponent, Literal)
+                    if term.base.name not in powers:
+                        powers[term.base.name] = term.exponent.value
+                    else:
+                        powers[term.base.name] += term.exponent.value
+            prefix = []
+            for name in powers:
+                if powers[name] == 1:
+                    prefix.append(Variable(name))
+                else:
+                    prefix.append(Power(Variable(name), Literal(powers[name])))
+            new_terms = prefix + new_terms
         return Term(new_coeff, new_terms)
 
     def deriv(self, respect):
@@ -161,7 +218,7 @@ class Sum(Expression):
         self.terms = terms
 
     def __str__(self):
-        return " + ".join(map(str, self.terms)).replace("+ -", "- ")
+        return "(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + ")"
 
     def contains(self, name):
         return any(term.contains(name) for term in self.terms)
@@ -175,7 +232,9 @@ class Sum(Expression):
         for term in new_terms:
             if isinstance(term, Literal):
                 new_literal.value += term.value
-        new_terms = [term for term in new_terms if not isinstance(term, Literal)]
+            if isinstance(term, Sum):
+                new_terms.extend(term.terms)
+        new_terms = [term for term in new_terms if not isinstance(term, (Literal, Sum))]
         if len(new_terms) == 0:
             return new_literal
         if new_literal.value == 0:
@@ -183,7 +242,8 @@ class Sum(Expression):
                 return new_terms[0]
             else:
                 return Sum(new_terms)
-        return Sum(new_terms + [new_literal])
+        new_terms.append(new_literal)
+        return Sum(new_terms)
 
     def deriv(self, respect):
         new_terms = [term.deriv(respect) for term in self.terms]
@@ -246,11 +306,25 @@ def euler_lagrange(lagrangian):
         eqs.append(Sum([term1, Term(-1, [term2])]).substitute({}))
     return eqs
 
-Expression.context = ["theta"]
-lagrangian = Sum([
-    Term(0.5, [Variable("m"), Power(Variable("l"), Literal(2)), Power(Variable("thetadot"), Literal(2))]),
-    Term(-1, [Variable("m"), Variable("g"), Variable("l")]),
-    Term(1, [Variable("m"), Variable("g"), Variable("l"), Cos(Variable("theta"))])
+Expression.context = ["theta1", "theta2"]
+x2 = Sum([
+    Term(1, [Variable("l"), Sin(Variable("theta1"))]),
+    Term(1, [Variable("l"), Sin(Variable("theta2"))])
 ])
-print("Lagrangian: L =", lagrangian)
-print(euler_lagrange(lagrangian)[0], "= 0")
+y2 = Sum([
+    Term(1, [Variable("l"), Cos(Variable("theta1"))]),
+    Term(1, [Variable("l"), Cos(Variable("theta2"))])
+])
+kinetic = Sum([
+    Term(0.5, [Power(x2.differentiate("t"), Literal(2))]),
+    Term(0.5, [Power(y2.differentiate("t"), Literal(2))]),
+])
+potential = Sum([
+    Term(1, [Variable("m"), Variable("g"), Variable("l"), Cos(Variable("theta1"))]),
+    Term(1, [Variable("m"), Variable("g"), y2]),
+])
+lagrangian = Sum([
+    kinetic,
+    Term(-1, [potential])
+])
+print(lagrangian.substitute({}))
