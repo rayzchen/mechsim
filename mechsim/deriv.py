@@ -1,6 +1,5 @@
 import math
 import itertools
-import numpy as np
 
 class Expression:
     context = []
@@ -362,58 +361,6 @@ class Cos(Function):
     def __init__(self, arg):
         super(Cos, self).__init__(arg, "cos", math.cos, negative_wrapper(Sin))
 
-def split_variable(term):
-    if isinstance(term, Variable) and term.name.endswith("dotdot"):
-        return term.name, Literal(1)
-    if not isinstance(term, Term):
-        return None, term
-    for subterm in term.terms:
-        if isinstance(subterm, Variable) and subterm.name.endswith("dotdot"):
-            newterms = term.terms.copy()
-            newterms.remove(subterm)
-            if not newterms:
-                return subterm.name, Literal(term.coeff)
-            return subterm.name, Term(term.coeff, newterms)
-    return None, term
-
-def euler_lagrange(lagrangian):
-    eqs = []
-    for variable in Expression.context:
-        term1 = lagrangian.differentiate(variable + "dot").differentiate("t")
-        term2 = lagrangian.differentiate(variable)
-        eq = Sum([term1, Term(-1, [term2])]).substitute({})
-
-        coeffs = {variable + "dotdot": [] for variable in Expression.context}
-        coeffs[None] = []
-        for term in eq.terms:
-            name, term = split_variable(term)
-            coeffs[name].append(term)
-        for name in coeffs:
-            coeffs[name] = Sum(coeffs[name]).substitute({})
-        eqs.append(coeffs)
-    return eqs
-
-def display_equations(eqs):
-    for coeffs in eqs:
-        line = ""
-        for name in coeffs:
-            if name is not None:
-                line += str(coeffs[name]) + name + " + "
-            else:
-                line += str(coeffs[name])
-        print(line, "= 0")
-
-def solve(equations, values):
-    rank = len(Expression.context)
-    matrix = np.zeros((rank, rank))
-    constants = np.zeros((rank,))
-    for i, coeffs in enumerate(equations):
-        for j, variable in enumerate(Expression.context):
-            matrix[i, j] = coeffs[variable + "dotdot"].evaluate(values)
-        constants[i] = -coeffs[None].evaluate(values)
-
-    return np.linalg.solve(matrix, constants).tolist()
-
 Expression.context = ["theta1", "theta2"]
 x2 = Var("r1") * Sin(Var("theta1")) + Var("r2") * Sin(Var("theta2"))
 y2 = Var("r1") * Cos(Var("theta1")) + Var("r2") * Cos(Var("theta2"))
@@ -422,11 +369,4 @@ kinetic = 0.5 * Var("m1") * Var("r1") ** 2 * Var("theta1dot") ** 2 + \
     0.5 * Var("m2") * y2.differentiate("t") ** 2
 potential = -Var("m1") * Var("g") * Var("r1") * Cos(Var("theta1")) - \
     Var("m2") * Var("g") * y2
-
 lagrangian = kinetic - potential
-lagrangian = lagrangian.substitute({
-    "m1": 1, "m2": 1,
-    "g": 10,
-    "r1": 0.5, "r2": 0.5,
-})
-equations = euler_lagrange(lagrangian)
