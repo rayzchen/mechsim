@@ -23,6 +23,35 @@ class Expression:
     def differentiate(self, respect):
         return self.deriv(respect).substitute({})
 
+    def __add__(self, other):
+        if isinstance(other, Expression):
+            return Sum([self, other])
+        elif isinstance(other, (int, float)):
+            return Sum([self, Literal(other)])
+        return NotImplemented
+    def __sub__(self, other):
+        if isinstance(other, Expression):
+            return Sum([self, -other])
+        elif isinstance(other, (int, float)):
+            return Sum([self, Literal(-other)])
+        return NotImplemented
+    def __mul__(self, other):
+        if isinstance(other, Expression):
+            return Term(1, [self, other])
+        elif isinstance(other, (int, float)):
+            return Term(other, [self])
+        return NotImplemented
+    def __rmul__(self, other):
+        if isinstance(other, (int, float)):
+            return Term(other, [self])
+        return NotImplemented
+    def __pow__(self, other):
+        if isinstance(other, (int, float)):
+            return Power(self, Literal(other))
+        return NotImplemented
+    def __neg__(self):
+        return Term(-1, [self])
+
 class Literal(Expression):
     def __init__(self, value):
         self.value = value
@@ -69,6 +98,9 @@ class Variable(Expression):
             return Literal(1)
         elif respect == "t":
             return Variable(self.name + "dot")
+        return Literal(0)
+
+Var = Variable
 
 class Power(Expression):
     def __init__(self, base, exponent):
@@ -215,6 +247,17 @@ class Term(Expression):
             deriv = Term(1, [functions[0], Term(1, functions[1:])]).deriv(respect)
         return Term(self.coeff, constants + [deriv])
 
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return Term(self.coeff * other, self.terms)
+        elif isinstance(other, Term):
+            return Term(self.coeff * other.coeff, self.terms + other.terms)
+        elif isinstance(other, Expression):
+            return Term(self.coeff, self.terms + [other])
+        return NotImplemented
+    def __neg__(self):
+        return Term(-self.coeff, self.terms)
+
 class Sum(Expression):
     def __init__(self, terms):
         assert len(terms)
@@ -260,6 +303,21 @@ class Sum(Expression):
             return new_terms[0]
         else:
             return Sum(new_terms)
+
+    def __add__(self, other):
+        if isinstance(other, (float, int)):
+            return Sum(self.terms + [Literal(other)])
+        elif isinstance(other, Sum):
+            return Sum(self.terms + other.terms)
+        elif isinstance(other, Expression):
+            return Sum(self.terms + [other])
+        return NotImplemented
+    def __sub__(self, other):
+        if isinstance(other, (float, int)):
+            return Sum(self.terms + [Literal(-other)])
+        elif isinstance(other, Expression):
+            return Sum(self.terms + [-other])
+        return NotImplemented
 
 class Function(Expression):
     def __init__(self, arg, name, func, deriv_class):
@@ -357,28 +415,15 @@ def solve(equations, values):
     return np.linalg.solve(matrix, constants).tolist()
 
 Expression.context = ["theta1", "theta2"]
-x2 = Sum([
-    Term(1, [Variable("r1"), Sin(Variable("theta1"))]),
-    Term(1, [Variable("r2"), Sin(Variable("theta2"))])
-])
-y2 = Sum([
-    Term(1, [Variable("r1"), Cos(Variable("theta1"))]),
-    Term(1, [Variable("r2"), Cos(Variable("theta2"))])
-])
-kinetic = Sum([
-    Term(0.5, [Variable("m1"), Power(Variable("r1"), Literal(2)), Power(Variable("theta1dot"), Literal(2))]),
-    Term(0.5, [Variable("m2"), Power(x2.differentiate("t"), Literal(2))]),
-    Term(0.5, [Variable("m2"), Power(y2.differentiate("t"), Literal(2))])
-])
-potential = Sum([
-    Term(-1, [Variable("m1"), Variable("g"), Variable("r1"), Cos(Variable("theta1"))]),
-    Term(-1, [Variable("m2"), Variable("g"), y2]),
-])
+x2 = Var("r1") * Sin(Var("theta1")) + Var("r2") * Sin(Var("theta2"))
+y2 = Var("r1") * Cos(Var("theta1")) + Var("r2") * Cos(Var("theta2"))
+kinetic = 0.5 * Var("m1") * Var("r1") ** 2 * Var("theta1dot") ** 2 + \
+    0.5 * Var("m2") * x2.differentiate("t") ** 2 + \
+    0.5 * Var("m2") * y2.differentiate("t") ** 2
+potential = -Var("m1") * Var("g") * Var("r1") * Cos(Var("theta1")) - \
+    Var("m2") * Var("g") * y2
 
-lagrangian = Sum([
-    kinetic,
-    Term(-1, [potential])
-])
+lagrangian = kinetic - potential
 lagrangian = lagrangian.substitute({
     "m1": 1, "m2": 1,
     "g": 10,
