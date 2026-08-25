@@ -252,7 +252,7 @@ class Sum(Expression):
         return result
 
     def deriv(self, respect):
-        new_terms = [term.deriv(respect) for term in self.terms]
+        new_terms = [term.deriv(respect) for term in self.terms if term.contains(respect)]
         new_terms = [term for term in new_terms if not (isinstance(term, Literal) and term.value == 0)]
         if not new_terms:
             return Literal(0)
@@ -305,6 +305,8 @@ class Cos(Function):
         super(Cos, self).__init__(arg, "cos", math.cos, negative_wrapper(Sin))
 
 def split_variable(term):
+    if isinstance(term, Variable) and term.name.endswith("dotdot"):
+        return term.name, Literal(1)
     if not isinstance(term, Term):
         return None, term
     for subterm in term.terms:
@@ -332,6 +334,16 @@ def euler_lagrange(lagrangian):
             coeffs[name] = Sum(coeffs[name]).substitute({})
         eqs.append(coeffs)
     return eqs
+
+def display_equations(eqs):
+    for coeffs in eqs:
+        line = ""
+        for name in coeffs:
+            if name is not None:
+                line += str(coeffs[name]) + name + " + "
+            else:
+                line += str(coeffs[name])
+        print(line, "= 0")
 
 def solve(equations, values):
     rank = len(Expression.context)
@@ -362,11 +374,11 @@ potential = Sum([
     Term(-1, [Variable("m1"), Variable("g"), Variable("r1"), Cos(Variable("theta1"))]),
     Term(-1, [Variable("m2"), Variable("g"), y2]),
 ])
+
 lagrangian = Sum([
     kinetic,
     Term(-1, [potential])
 ])
-
 lagrangian = lagrangian.substitute({
     "m1": 1, "m2": 1,
     "g": 10,
