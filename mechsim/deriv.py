@@ -11,9 +11,6 @@ class Expression:
     def contains(self, name):
         return False
 
-    def copy(self):
-        pass
-
     def substitute(self, values):
         pass
 
@@ -36,11 +33,8 @@ class Literal(Expression):
     def contains(self, name):
         return False
 
-    def copy(self):
-        return Literal(self.value)
-
     def substitute(self, values):
-        return self.copy()
+        return self
 
     def evaluate(self, values):
         return self.value
@@ -62,13 +56,10 @@ class Variable(Expression):
             return True
         return False
 
-    def copy(self):
-        return Variable(self.name)
-
     def substitute(self, values):
         if self.name in values:
             return Literal(values[self.name])
-        return self.copy()
+        return self
 
     def evaluate(self, values):
         return values[self.name]
@@ -90,9 +81,6 @@ class Power(Expression):
     def contains(self, name):
         return self.base.contains(name) or self.exponent.contains(name)
 
-    def copy(self):
-        return Power(self.base.copy(), self.exponent.copy())
-
     def substitute(self, values):
         assert isinstance(self.exponent, Literal)
         if self.exponent.value == 0:
@@ -100,7 +88,7 @@ class Power(Expression):
 
         if isinstance(self.base, Term):
             new_coeff = self.base.coeff ** self.exponent.value
-            new_terms = [Power(term, self.exponent.copy()) for term in self.base.terms]
+            new_terms = [Power(term, self.exponent) for term in self.base.terms]
             return Term(new_coeff, new_terms).substitute(values)
 
         new_base = self.base.substitute(values)
@@ -108,7 +96,7 @@ class Power(Expression):
             return Literal(new_base.value ** self.exponent.value)
         if self.exponent.value == 1:
             return new_base
-        return Power(new_base, self.exponent.copy())
+        return Power(new_base, self.exponent)
 
     def evaluate(self, values):
         return self.base.evaluate(values) ** self.exponent.evaluate(values)
@@ -117,8 +105,8 @@ class Power(Expression):
         if self.base.contains(respect):
             assert isinstance(self.exponent, Literal)
             if self.exponent.value == 2:
-                return Term(2, [self.base.copy(), self.base.deriv(respect)])
-            return Term(self.exponent.value, [Power(self.base.copy(), Literal(self.exponent.value - 1)), self.base.deriv(respect)])
+                return Term(2, [self.base, self.base.deriv(respect)])
+            return Term(self.exponent.value, [Power(self.base, Literal(self.exponent.value - 1)), self.base.deriv(respect)])
         return Literal(0)
 
 class Term(Expression):
@@ -138,9 +126,6 @@ class Term(Expression):
 
     def contains(self, name):
         return any(term.contains(name) for term in self.terms)
-
-    def copy(self):
-        return Term(self.coeff, [term.copy() for term in self.terms])
 
     def substitute(self, values):
         new_terms = [term.substitute(values) for term in self.terms]
@@ -176,7 +161,7 @@ class Term(Expression):
             axes = [term.terms for term in sums]
             new_terms = []
             for product in itertools.product(*axes):
-                new_terms.append(Term(new_coeff, [factors_term.copy()] + list(product)))
+                new_terms.append(Term(new_coeff, [factors_term] + list(product)))
             return Sum(new_terms).substitute(values)
 
         if variables:
@@ -241,9 +226,6 @@ class Sum(Expression):
     def contains(self, name):
         return any(term.contains(name) for term in self.terms)
 
-    def copy(self):
-        return Sum([term.copy() for term in self.terms])
-
     def substitute(self, values):
         new_terms = [term.substitute(values) for term in self.terms]
         new_literal = Literal(0)
@@ -292,9 +274,6 @@ class Function(Expression):
     def contains(self, name):
         return self.arg.contains(name)
 
-    def copy(self):
-        return self.__class__(self.arg)
-
     def substitute(self, values):
         new_arg = self.arg.substitute(values)
         if isinstance(new_arg, Literal):
@@ -308,8 +287,8 @@ class Function(Expression):
         if self.arg.contains(respect):
             deriv = self.arg.deriv(respect)
             if isinstance(deriv, Literal) and deriv.value == 1:
-                return self.deriv_class(self.arg.copy())
-            return Term(1, [self.deriv_class(self.arg.copy()), deriv])
+                return self.deriv_class(self.arg)
+            return Term(1, [self.deriv_class(self.arg), deriv])
         return Literal(0)
 
 def negative_wrapper(cls):
