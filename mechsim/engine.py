@@ -47,28 +47,54 @@ def display_equations(eqs):
 
 class Solver:
     def __init__(self, kinetic, potential):
-        self.lagrangian = kinetic - potential
-        self.equations = None
+        self.original = (kinetic, potential)
+        self.kinetic = None
+        self.potential = None
+        self.lagrangian = None
+        self.motion_eqs = None
         self.context = Expression.context
         self.degrees = len(self.context)
-        self.params = np.zeros((self.degrees,))
-        self.param_derivs = np.zeros((self.degrees,))
+        self.phase = np.zeros((2, self.degrees))
+        self.time = 0
 
     def load_constants(self, values):
-        self.lagrangian = self.lagrangian.substitute(values)
-        self.equations = euler_lagrange(self.lagrangian)
+        self.kinetic = self.original[0].substitute(values)
+        self.potential = self.original[1].substitute(values)
+        self.lagrangian = self.kinetic - self.potential
+        self.motion_eqs = euler_lagrange(self.lagrangian)
 
     def load_initial_values(self, params, param_derivs):
-        self.params = np.array(params)
-        self.param_derivs = np.array(param_derivs)
+        self.phase[0] = np.array(params)
+        self.phase[1] = np.array(param_derivs)
+        self.time = 0
 
-    def solve(self):
-        values = {name: self.params[i] for i, name in enumerate(self.context)}
-        values.extend({name + "dot": self.param_derivs[i] for i, name in enumerate(self.context)})
+    def get_solver_values(self, phase, t):
+        values = {name: phase[0][i] for i, name in enumerate(self.context)}
+        values.update({name + "dot": phase[1][i] for i, name in enumerate(self.context)})
+        values["t"] = t
+        return values
+
+    def gradient(self, phase, t):
+        values = self.get_solver_values(phase, t)
         matrix = np.zeros((self.degrees, self.degrees))
         constants = np.zeros((self.degrees,))
         for i in range(self.degrees):
             for j in range(self.degrees):
-                matrix[i, j] = self.equations[i][j].evaluate(values)
-            constants[i] = -self.equations[i][self.degrees].evaluate(values)
-        return np.linalg.solve(matrix, constants)
+                matrix[i, j] = self.motion_eqs[i][j].evaluate(values)
+            constants[i] = -self.motion_eqs[i][self.degrees].evaluate(values)
+        accelerations = np.linalg.solve(matrix, constants)
+        return np.array([phase[1], accelerations])
+
+    def step(self, dt):
+        k1 = dt * self.gradient(self.phase, self.time)
+        k2 = dt * self.gradient(self.phase + k1 / 2, self.time + dt / 2)
+        k3 = dt * self.gradient(self.phase + k2 / 2, self.time + dt / 2)
+        k4 = dt * self.gradient(self.phase + k3, self.time + dt)
+        self.phase += (k1 + 2 * k2 + 2 * k3 + k4) / 6
+        self.time += dt
+
+    def get_energies(self):
+        values = self.get_solver_values(self.phase, self.time)
+        kinetic = self.kinetic.evaluate(values)
+        potential = self.potential.evaluate(values)
+        return (kinetic, potential)
