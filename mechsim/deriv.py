@@ -95,9 +95,10 @@ class Power(Expression):
 
     def substitute(self, values):
         assert isinstance(self.exponent, Literal)
-        if isinstance(self.base, Sum):
-            return Term(1, [self.base.copy()] * self.exponent.value).substitute(values)
-        elif isinstance(self.base, Term):
+        if self.exponent.value == 0:
+            return Literal(1)
+
+        if isinstance(self.base, Term):
             new_coeff = self.base.coeff ** self.exponent.value
             new_terms = [Power(term, self.exponent.copy()) for term in self.base.terms]
             return Term(new_coeff, new_terms).substitute(values)
@@ -105,9 +106,9 @@ class Power(Expression):
         new_base = self.base.substitute(values)
         if isinstance(new_base, Literal):
             return Literal(new_base.value ** self.exponent.value)
-        if self.exponent.value == 0:
-            return Literal(1)
-        return Power(new_base, self.exponent)
+        if self.exponent.value == 1:
+            return new_base
+        return Power(new_base, self.exponent.copy())
 
     def evaluate(self, values):
         return self.base.evaluate(values) ** self.exponent.evaluate(values)
@@ -393,5 +394,3 @@ lagrangian = lagrangian.substitute({
     "r1": 0.5, "r2": 0.5,
 })
 equations = euler_lagrange(lagrangian)
-for eq in equations:
-    print(" + ".join(str(coeff) + (name if name else "") for name, coeff in eq.items()), "= 0")
