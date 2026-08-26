@@ -16,7 +16,7 @@ class Expression:
     def __str__(self):
         pass
 
-    def __hash__(self):
+    def key(self):
         pass
 
     def contains(self, name):
@@ -70,8 +70,8 @@ class Literal(Expression):
     def __str__(self):
         return str(self.value)
 
-    def __hash__(self):
-        return hash(self.value)
+    def key(self):
+        return ("literal", self.value)
 
     def contains(self, name):
         return False
@@ -92,8 +92,8 @@ class Variable(Expression):
     def __str__(self):
         return self.name
 
-    def __hash__(self):
-        return hash(self.name)
+    def key(self):
+        return ("variiable", self.name)
 
     def contains(self, name):
         if name == self.name:
@@ -129,8 +129,8 @@ class Power(Expression):
             return "(" + str(self.base) + ")^" + str(self.exponent)
         return str(self.base) + "^" + str(self.exponent)
 
-    def __hash__(self):
-        return hash(("power", hash(self.base), hash(self.exponent)))
+    def key(self):
+        return ("power", self.base.key(), self.exponent.key())
 
     def contains(self, name):
         return self.base.contains(name) or self.exponent.contains(name)
@@ -178,10 +178,10 @@ class Term(Expression):
             prefix = str(self.coeff)
         return prefix + "".join(map(str, self.terms))
 
-    def __hash__(self):
+    def key(self):
         if len(self.terms) == 1:
-            return hash(self.terms[0])
-        return hash(("term", frozenset([hash(term) for term in self.terms])))
+            return self.terms[0].key()
+        return ("term", tuple(sorted([term.key() for term in self.terms])))
 
     def contains(self, name):
         return any(term.contains(name) for term in self.terms)
@@ -190,7 +190,7 @@ class Term(Expression):
         substituted = [term.substitute(values) for term in self.terms]
         new_coeff = self.coeff
         sums = []
-        hashes = OrderedDict()
+        keys = OrderedDict()
         for term in substituted:
             if isinstance(term, Literal):
                 new_coeff *= term.value
@@ -206,14 +206,14 @@ class Term(Expression):
                 else:
                     base = term
                     exp = 1
-                base_hash = hash(base)
-                if base_hash not in hashes:
-                    hashes[base_hash] = [base, exp]
+                base_key = base.key()
+                if base_key not in keys:
+                    keys[base_key] = [base, exp]
                 else:
-                    hashes[base_hash][1] += exp
+                    keys[base_key][1] += exp
 
         new_terms = []
-        for term, exp in hashes.values():
+        for term, exp in keys.values():
             if exp == 1:
                 new_terms.append(term)
             elif exp != 0:
@@ -285,8 +285,8 @@ class Sum(Expression):
         assert len(terms)
         self.terms = terms
 
-    def __hash__(self):
-        return hash(("sum", frozenset([hash(term) for term in self.terms])))
+    def key(self):
+        return ("sum", tuple(sorted([term.key() for term in self.terms])))
 
     def __str__(self):
         return "(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + ")"
@@ -308,20 +308,20 @@ class Sum(Expression):
         if len(new_terms) == 0:
             return new_literal
 
-        hashes = OrderedDict()
+        keys = OrderedDict()
         for term in new_terms:
-            term_hash = hash(term)
+            term_key = term.key()
             if isinstance(term, Term):
                 multiple = term.coeff
             else:
                 multiple = 1
-            if term_hash not in hashes:
-                hashes[term_hash] = [term, multiple]
+            if term_key not in keys:
+                keys[term_key] = [term, multiple]
             else:
-                hashes[term_hash][1] += multiple
+                keys[term_key][1] += multiple
 
         new_terms = []
-        for term, coeff in hashes.values():
+        for term, coeff in keys.values():
             if coeff != 0:
                 if isinstance(term, Term):
                     new_terms.append(Term(coeff, term.terms))
@@ -379,8 +379,8 @@ class Function(Expression):
     def __str__(self):
         return self.name + "(" + str(self.arg) + ")"
 
-    def __hash__(self):
-        return hash((self.name, hash(self.arg)))
+    def key(self):
+        return (self.name, self.arg.key())
 
     def contains(self, name):
         return self.arg.contains(name)
