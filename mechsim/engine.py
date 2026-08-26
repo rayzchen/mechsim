@@ -77,9 +77,11 @@ class Solver:
         self.lagrangian = self.kinetic - self.potential
         self.motion_eqs = euler_lagrange(self.lagrangian)
 
-    def load_initial_values(self, params, param_derivs):
-        self.phase[0] = np.array(params)
-        self.phase[1] = np.array(param_derivs)
+    def load_initial_values(self, params, param_derivs=None):
+        self.phase = np.zeros((2, self.degrees))
+        self.phase[0] = params
+        if param_derivs is not None:
+            self.phase[1] = param_derivs
         self.time = 0
 
     def get_solver_values(self, phase, t):
