@@ -127,10 +127,12 @@ class Solver:
         return (kinetic, potential)
 
     def display_equations(self):
+        lines = []
         for row in self.motion_eqs:
             line = ""
             for i in range(len(Expression.context)):
                 variable = str(Variable(Expression.context[i] + "dotdot"))
                 line += str(row[i]) + variable + " + "
-            line += str(row[-1])
-            print(line, "= 0")
+            line += str(row[-1]) + " = 0"
+            lines.append(line)
+        return lines

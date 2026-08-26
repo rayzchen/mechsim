@@ -14,7 +14,7 @@ solver = Solver(kinetic, potential)
 solver.load_constants({"m1": 1, "m2": 1, "g": 10, "l1": 0.5, "l2": 0.5})
 solver.load_initial_values([2, 3.14])
 
-STEPS = 10
+STEPS = 20
 dt = 1/60
 last = 0
 def update(timestamp):
@@ -30,9 +30,16 @@ def update(timestamp):
     window.requestAnimationFrame(ffi.create_proxy(update))
 
     t, v = solver.get_energies()
-    label.innerHTML = f"Kinetic: {t:.2f} | Potential: {v:.2f} | Total: {t + v:.2f}"
+    energy_label.innerHTML = f"Kinetic: {t:.2f} | Potential: {v:.2f} | Total: {t + v:.2f}"
 
 if __name__ == "__main__":
     from pyscript import window, ffi, web
-    label = web.page["#energy-label"]
+
+    equation_label = web.page["#equation-label"]
+    Expression.latex_mode = True
+    for line in solver.display_equations():
+        equation_label.innerHTML += "$$" + line + "$$"
+    window.MathJax.typesetPromise(["#equation-label"])
+
+    energy_label = web.page["#energy-label"]
     update(last)

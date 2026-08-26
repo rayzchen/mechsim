@@ -1,11 +1,23 @@
 import math
 from collections import OrderedDict
 
+if hasattr(float, "as_integer_ratio"):
+    def get_fraction(value):
+        return value.as_integer_ratio()
+else:
+    def get_fraction(value):
+        differences = [1]
+        for i in range(1, 20):
+            top = value * i
+            differences.append(abs(top - round(top)))
+        bottom = differences.index(min(differences))
+        return round(value * bottom), bottom
+
 def format_number(value):
     if not Expression.latex_mode:
         return str(value)
 
-    n, d = value.as_integer_ratio()
+    n, d = get_fraction(value)
     if d == 1:
         return str(n)
     if n < 0:
