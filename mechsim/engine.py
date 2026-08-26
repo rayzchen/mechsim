@@ -43,14 +43,6 @@ def euler_lagrange(lagrangian):
         eqs.append(row)
     return eqs
 
-def display_equations(eqs):
-    for row in eqs:
-        line = ""
-        for i in range(len(Expression.context)):
-            line += str(row[i]) + Expression.context[i] + "dotdot + "
-        line += str(row[-1])
-        print(line, "= 0")
-
 if MICROPYTHON:
     def solve_system(a, b):
         L = np.linalg.cholesky(a)
@@ -115,3 +107,11 @@ class Solver:
         kinetic = self.kinetic.evaluate(values)
         potential = self.potential.evaluate(values)
         return (kinetic, potential)
+
+    def display_equations(self):
+        for row in self.motion_eqs:
+            line = ""
+            for i in range(len(Expression.context)):
+                line += str(row[i]) + Expression.context[i] + "dotdot + "
+            line += str(row[-1])
+            print(line, "= 0")
