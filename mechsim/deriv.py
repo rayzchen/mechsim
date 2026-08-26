@@ -116,6 +116,8 @@ class Power(Expression):
         self.exponent = exponent
 
     def __str__(self):
+        if isinstance(self.base, Term):
+            return "(" + str(self.base) + ")^" + str(self.exponent)
         return str(self.base) + "^" + str(self.exponent)
 
     def contains(self, name):
@@ -369,13 +371,3 @@ class Sin(Function):
 class Cos(Function):
     def __init__(self, arg):
         super(Cos, self).__init__(arg, "cos", math.cos, negative_wrapper(Sin))
-
-Expression.context = ["theta1", "theta2"]
-x2 = Var("r1") * Sin(Var("theta1")) + Var("r2") * Sin(Var("theta2"))
-y2 = Var("r1") * Cos(Var("theta1")) + Var("r2") * Cos(Var("theta2"))
-kinetic = 0.5 * Var("m1") * Var("r1") ** 2 * Var("theta1dot") ** 2 + \
-    0.5 * Var("m2") * x2.differentiate("t") ** 2 + \
-    0.5 * Var("m2") * y2.differentiate("t") ** 2
-potential = -Var("m1") * Var("g") * Var("r1") * Cos(Var("theta1")) - \
-    Var("m2") * Var("g") * y2
-lagrangian = kinetic - potential
