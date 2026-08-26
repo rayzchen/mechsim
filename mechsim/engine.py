@@ -102,6 +102,9 @@ class Solver:
         self.phase += (k1 + 2 * k2 + 2 * k3 + k4) / 6
         self.time += dt
 
+    def get_params(self):
+        return self.phase[0].tolist()
+
     def get_energies(self):
         values = self.get_solver_values(self.phase, self.time)
         kinetic = self.kinetic.evaluate(values)
