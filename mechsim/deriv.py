@@ -146,11 +146,15 @@ class Power(Expression):
             return Term(new_coeff, new_terms).substitute(values)
 
         new_base = self.base.substitute(values)
-        if isinstance(new_base, Literal):
-            return Literal(new_base.value ** self.exponent.value)
-        if self.exponent.value == 1:
+        new_exponent = self.exponent
+        if isinstance(new_base, Power):
+            new_exponent = Literal(new_base.exponent.value * new_exponent.value)
+            new_base = new_base.base
+        elif isinstance(new_base, Literal):
+            return Literal(new_base.value ** new_exponent.value)
+        if new_exponent.value == 1:
             return new_base
-        return Power(new_base, self.exponent)
+        return Power(new_base, new_exponent)
 
     def evaluate(self, values):
         return self.base.evaluate(values) ** self.exponent.evaluate(values)
@@ -325,8 +329,10 @@ class Sum(Expression):
             if coeff != 0:
                 if isinstance(term, Term):
                     new_terms.append(Term(coeff, term.terms))
-                else:
+                elif coeff != 1:
                     new_terms.append(Term(coeff, [term]))
+                else:
+                    new_terms.append(term)
 
         if len(new_terms) == 0:
             return new_literal
