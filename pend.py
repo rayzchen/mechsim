@@ -1,12 +1,12 @@
 from mechsim.deriv import Expression, Var
 from mechsim.engine import Solver
-from mechsim.system import Mass
+from mechsim.system import Mass, Vector
 
 Expression.context = ["theta1", "theta2"]
 mass1 = Mass("m1")
-mass1.constrain_distance("theta1", Var("l1"))
+mass1.constrain_offset("theta1", Vector(0, -Var("l1")))
 mass2 = Mass("m2")
-mass2.constrain_distance("theta2", Var("l2"), mass1.position)
+mass2.constrain_offset("theta2", Vector(0, -Var("l2")), mass1.position)
 kinetic = mass1.kinetic() + mass2.kinetic()
 potential = mass1.potential() + mass2.potential()
 

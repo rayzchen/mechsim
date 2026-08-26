@@ -28,6 +28,11 @@ class Vector:
             return Vector(self.x - other.x, self.y - other.y)
         return NotImplemented
 
+    def rotate(self, angle):
+        x = self.x * Cos(angle) + self.y * Sin(angle)
+        y = self.x * -Sin(angle) + self.y * Cos(angle)
+        return Vector(x, y)
+
     @staticmethod
     def polar(r, theta):
         x = conv(r) * Sin(conv(theta))
@@ -39,8 +44,8 @@ class Mass:
         self.mass_var = Var(name)
         self.position = None
 
-    def constrain_distance(self, name, length, centre=None):
-        axis = Vector.polar(length, Var(name))
+    def constrain_offset(self, name, offset, centre=None):
+        axis = offset.rotate(Var(name))
         if centre is None:
             self.position = axis
         else:
