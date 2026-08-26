@@ -45,8 +45,12 @@ def euler_lagrange(lagrangian):
 
 if MICROPYTHON:
     def solve_system(a, b):
-        L = np.linalg.cholesky(a)
-        return sp.linalg.cho_solve(L, b)
+        try:
+            L = np.linalg.cholesky(a)
+            return sp.linalg.cho_solve(L, b)
+        except ValueError:
+            L = np.linalg.cholesky(-a)
+            return sp.linalg.cho_solve(L, -b)
 else:
     def solve_system(a, b):
         return np.linalg.solve(a, b)
