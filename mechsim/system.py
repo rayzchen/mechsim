@@ -1,9 +1,14 @@
 from mechsim.deriv import Var, Sin, Cos, Literal
 
+def conv(value):
+    if isinstance(value, (float, int)):
+        return Literal(value)
+    return value
+
 class Vector:
     def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        self.x = conv(x)
+        self.y = conv(y)
 
     def differentiate(self, respect):
         return Vector(
@@ -25,8 +30,8 @@ class Vector:
 
     @staticmethod
     def polar(r, theta):
-        x = r * Sin(theta)
-        y = -r * Cos(theta)
+        x = conv(r) * Sin(conv(theta))
+        y = -conv(r) * Cos(conv(theta))
         return Vector(x, y)
 
 class Mass:
@@ -41,14 +46,10 @@ class Mass:
         else:
             self.position = centre + axis
 
-    def constrain_horizontal(self, name, y=None):
-        if y is None:
-            y = Literal(0)
+    def constrain_horizontal(self, name, y=0):
         self.position = Vector(Var(name), y)
 
-    def constrain_vertical(self, name, x=None):
-        if x is None:
-            x = Literal(0)
+    def constrain_vertical(self, name, x=0):
         self.position = Vector(x, Var(name))
 
     def kinetic(self):
@@ -62,8 +63,8 @@ class Spring:
     def __init__(self, point1, point2, length, stiffness):
         self.point1 = point1
         self.point2 = point2
-        self.length = length
-        self.stiffness = stiffness
+        self.length = conv(length)
+        self.stiffness = conv(stiffness)
 
     def potential(self):
         distance2 = (self.point2 - self.point1).mag_squared()
