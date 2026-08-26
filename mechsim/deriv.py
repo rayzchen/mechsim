@@ -16,6 +16,9 @@ class Expression:
     def __str__(self):
         pass
 
+    def __hash__(self):
+        pass
+
     def contains(self, name):
         return False
 
@@ -67,6 +70,9 @@ class Literal(Expression):
     def __str__(self):
         return str(self.value)
 
+    def __hash__(self):
+        return hash(self.value)
+
     def contains(self, name):
         return False
 
@@ -85,6 +91,9 @@ class Variable(Expression):
 
     def __str__(self):
         return self.name
+
+    def __hash__(self):
+        return hash(self.name)
 
     def contains(self, name):
         if name == self.name:
@@ -119,6 +128,9 @@ class Power(Expression):
         if isinstance(self.base, Term):
             return "(" + str(self.base) + ")^" + str(self.exponent)
         return str(self.base) + "^" + str(self.exponent)
+
+    def __hash__(self):
+        return hash(("power", hash(self.base), hash(self.exponent)))
 
     def contains(self, name):
         return self.base.contains(name) or self.exponent.contains(name)
@@ -166,33 +178,50 @@ class Term(Expression):
             prefix = str(self.coeff)
         return prefix + "".join(map(str, self.terms))
 
+    def __hash__(self):
+        if len(self.terms) == 1:
+            return hash(self.terms[0])
+        return hash(("term", frozenset([hash(term) for term in self.terms])))
+
     def contains(self, name):
         return any(term.contains(name) for term in self.terms)
 
     def substitute(self, values):
-        new_terms = [term.substitute(values) for term in self.terms]
+        substituted = [term.substitute(values) for term in self.terms]
         new_coeff = self.coeff
         sums = []
-        variables = []
-        for term in new_terms:
+        hashes = OrderedDict()
+        for term in substituted:
             if isinstance(term, Literal):
                 new_coeff *= term.value
             elif isinstance(term, Term):
                 new_coeff *= term.coeff
-                new_terms.extend(term.terms)
-            elif isinstance(term, Variable):
-                variables.append(term)
-            elif isinstance(term, Power):
-                if isinstance(term.base, Variable):
-                    variables.append(term)
-            if isinstance(term, Sum):
+                substituted.extend(term.terms)
+            elif isinstance(term, Sum):
                 sums.append(term)
+            else:
+                if isinstance(term, Power):
+                    base = term.base
+                    exp = term.exponent.value
+                else:
+                    base = term
+                    exp = 1
+                base_hash = hash(base)
+                if base_hash not in hashes:
+                    hashes[base_hash] = [base, exp]
+                else:
+                    hashes[base_hash][1] += exp
+
+        new_terms = []
+        for term, exp in hashes.values():
+            if exp == 1:
+                new_terms.append(term)
+            elif exp != 0:
+                new_terms.append(Power(term, Literal(exp)))
 
         new_terms = [term for term in new_terms if not isinstance(term, (Literal, Term))]
-        if new_coeff == 0 or len(new_terms) == 0:
+        if new_coeff == 0:
             return Literal(new_coeff)
-        if new_coeff == 1 and len(new_terms) == 1:
-            return new_terms[0]
 
         if sums:
             factors = [term for term in new_terms if not isinstance(term, Sum)]
@@ -206,28 +235,11 @@ class Term(Expression):
                 new_terms.append(Term(new_coeff, [factors_term] + list(product)))
             return Sum(new_terms).substitute(values)
 
-        if variables:
-            new_terms = [term for term in new_terms if term not in variables]
-            powers = OrderedDict()
-            for term in variables:
-                if isinstance(term, Variable):
-                    if term.name not in powers:
-                        powers[term.name] = 1
-                    else:
-                        powers[term.name] += 1
-                elif isinstance(term, Power):
-                    assert isinstance(term.exponent, Literal)
-                    if term.base.name not in powers:
-                        powers[term.base.name] = term.exponent.value
-                    else:
-                        powers[term.base.name] += term.exponent.value
-            prefix = []
-            for name in powers:
-                if powers[name] == 1:
-                    prefix.append(Variable(name))
-                else:
-                    prefix.append(Power(Variable(name), Literal(powers[name])))
-            new_terms = prefix + new_terms
+        if len(new_terms) == 0:
+            return Literal(new_coeff)
+        if new_coeff == 1 and len(new_terms) == 1:
+            return new_terms[0]
+
         return Term(new_coeff, new_terms)
 
     def evaluate(self, values):
@@ -273,6 +285,9 @@ class Sum(Expression):
         assert len(terms)
         self.terms = terms
 
+    def __hash__(self):
+        return hash(("sum", frozenset([hash(term) for term in self.terms])))
+
     def __str__(self):
         return "(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + ")"
 
@@ -280,14 +295,39 @@ class Sum(Expression):
         return any(term.contains(name) for term in self.terms)
 
     def substitute(self, values):
-        new_terms = [term.substitute(values) for term in self.terms]
+        substituted = [term.substitute(values) for term in self.terms]
         new_literal = Literal(0)
-        for term in new_terms:
+        new_terms = []
+        for term in substituted:
             if isinstance(term, Literal):
                 new_literal.value += term.value
-            if isinstance(term, Sum):
-                new_terms.extend(term.terms)
-        new_terms = [term for term in new_terms if not isinstance(term, (Literal, Sum))]
+            elif isinstance(term, Sum):
+                substituted.extend(term.terms)
+            else:
+                new_terms.append(term)
+        if len(new_terms) == 0:
+            return new_literal
+
+        hashes = OrderedDict()
+        for term in new_terms:
+            term_hash = hash(term)
+            if isinstance(term, Term):
+                multiple = term.coeff
+            else:
+                multiple = 1
+            if term_hash not in hashes:
+                hashes[term_hash] = [term, multiple]
+            else:
+                hashes[term_hash][1] += multiple
+
+        new_terms = []
+        for term, coeff in hashes.values():
+            if coeff != 0:
+                if isinstance(term, Term):
+                    new_terms.append(Term(coeff, term.terms))
+                else:
+                    new_terms.append(Term(coeff, [term]))
+
         if len(new_terms) == 0:
             return new_literal
         if new_literal.value == 0:
@@ -338,6 +378,9 @@ class Function(Expression):
 
     def __str__(self):
         return self.name + "(" + str(self.arg) + ")"
+
+    def __hash__(self):
+        return hash((self.name, hash(self.arg)))
 
     def contains(self, name):
         return self.arg.contains(name)
