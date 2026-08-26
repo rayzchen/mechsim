@@ -1,5 +1,13 @@
 import math
-import itertools
+
+def cartesian_product(*iterables):
+    pools = [tuple(pool) for pool in iterables]
+    result = [[]]
+    for pool in pools:
+        result = [x+[y] for x in result for y in pool]
+
+    for prod in result:
+        yield prod
 
 class Expression:
     context = []
@@ -191,7 +199,7 @@ class Term(Expression):
                 factors_term = Literal(1)
             axes = [term.terms for term in sums]
             new_terms = []
-            for product in itertools.product(*axes):
+            for product in cartesian_product(*axes):
                 new_terms.append(Term(new_coeff, [factors_term] + list(product)))
             return Sum(new_terms).substitute(values)
 
@@ -350,7 +358,7 @@ class Function(Expression):
 
 def negative_wrapper(cls):
     def constructor(arg):
-        return Term(-1, [cls(arg)])
+        return -cls(arg)
     return constructor
 
 class Sin(Function):
