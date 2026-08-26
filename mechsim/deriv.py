@@ -1,6 +1,35 @@
 import math
 from collections import OrderedDict
 
+def format_number(value):
+    if not Expression.latex_mode:
+        return str(value)
+
+    n, d = value.as_integer_ratio()
+    if d == 1:
+        return str(n)
+    if n < 0:
+        return "-\\frac{" + str(-n) + "}{" + str(d) + "}"
+    else:
+        return "\\frac{" + str(n) + "}{" + str(d) + "}"
+
+def format_variable(name):
+    if not Expression.latex_mode:
+        return name
+
+    subscript = ""
+    counter = 0
+    while counter < len(name):
+        if name[counter].isdigit():
+            break
+        counter += 1
+    if counter < len(name):
+        subscript = "_" + name[counter:]
+        name = name[:counter]
+    if len(name) > 1:
+        name = "\\" + name
+    return name + subscript
+
 def cartesian_product(*iterables):
     pools = [tuple(pool) for pool in iterables]
     result = [[]]
@@ -12,6 +41,7 @@ def cartesian_product(*iterables):
 
 class Expression:
     context = []
+    latex_mode = False
 
     def __str__(self):
         pass
@@ -68,7 +98,7 @@ class Literal(Expression):
         self.value = value
 
     def __str__(self):
-        return str(self.value)
+        return format_number(self.value)
 
     def key(self):
         return ("literal", self.value)
@@ -90,7 +120,12 @@ class Variable(Expression):
         self.name = name
 
     def __str__(self):
-        return self.name
+        if Expression.latex_mode:
+            if self.name.endswith("dotdot"):
+                return "\\ddot{" + format_variable(self.name[:-6]) + "}"
+            elif self.name.endswith("dot"):
+                return "\\dot{" + format_variable(self.name[:-3]) + "}"
+        return format_variable(self.name)
 
     def key(self):
         return ("variiable", self.name)
@@ -127,6 +162,8 @@ class Power(Expression):
     def __str__(self):
         if isinstance(self.base, Term):
             return "(" + str(self.base) + ")^" + str(self.exponent)
+        elif isinstance(self.base, Function) and Expression.latex_mode:
+            return "\\" + self.base.name + "^{" + str(self.exponent) + "}" + str(self.base.arg)
         return str(self.base) + "^" + str(self.exponent)
 
     def key(self):
@@ -179,7 +216,7 @@ class Term(Expression):
         elif self.coeff == 1:
             prefix = ""
         else:
-            prefix = str(self.coeff)
+            prefix = format_number(self.coeff)
         return prefix + "".join(map(str, self.terms))
 
     def key(self):
@@ -216,8 +253,12 @@ class Term(Expression):
                 else:
                     keys[base_key][1] += exp
 
+        values = list(keys.values())
+        functions = [pair for pair in values if isinstance(pair[0], Function)]
+        other = [pair for pair in values if not isinstance(pair[0], Function)]
+
         new_terms = []
-        for term, exp in keys.values():
+        for term, exp in other + functions:
             if exp == 1:
                 new_terms.append(term)
             elif exp != 0:
@@ -383,6 +424,8 @@ class Function(Expression):
         self.deriv_class = deriv_class
 
     def __str__(self):
+        if Expression.latex_mode:
+            return "\\" + self.name + str(self.arg)
         return self.name + "(" + str(self.arg) + ")"
 
     def key(self):

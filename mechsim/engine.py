@@ -130,6 +130,7 @@ class Solver:
         for row in self.motion_eqs:
             line = ""
             for i in range(len(Expression.context)):
-                line += str(row[i]) + Expression.context[i] + "dotdot + "
+                variable = str(Variable(Expression.context[i] + "dotdot"))
+                line += str(row[i]) + variable + " + "
             line += str(row[-1])
             print(line, "= 0")
