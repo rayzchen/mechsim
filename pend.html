@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
+    <style>
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        function drawHinge() {
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, 2 * Math.PI);
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.fillStyle = "white";
+            ctx.fill();
+        }
+
+        function drawBar() {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, 100);
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function drawMass() {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, 10, 0, 2 * Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill();
+        }
+
+        function drawSystem(params) {
+            const theta1 = params[0];
+            const theta2 = params[1];
+            ctx.resetTransform();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            ctx.rotate(-theta1);
+            drawBar();
+            drawHinge();
+
+            ctx.translate(0, 100);
+            drawMass();
+
+            ctx.rotate(theta1);
+            ctx.rotate(-theta2);
+            drawBar();
+            drawHinge();
+
+            ctx.translate(0, 100);
+            drawMass();
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener("load", resize);
+        window.addEventListener("resize", resize);
+    </script>
+    <script type="mpy" src="pend.py" config="mechsim-conf.json"></script>
+</body>
+</html>

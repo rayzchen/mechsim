@@ -1,0 +1,9 @@
+{
+    "packages": ["ulab", "collections"],
+    "files": {
+        "mechsim/__init__.py": "mechsim/",
+        "mechsim/deriv.py": "mechsim/",
+        "mechsim/engine.py": "mechsim/",
+        "mechsim/system.py": "mechsim/"
+    }
+}
