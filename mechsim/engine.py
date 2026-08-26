@@ -48,6 +48,14 @@ def euler_lagrange(lagrangian):
 
 if MICROPYTHON:
     def solve_system(a, b):
+        if a.shape == (1, 1):
+            return [b[0] / a[0, 0]]
+        if a.shape == (2, 2):
+            det = a[0, 0] * a[1, 1] - a[0, 1] * a[1, 0]
+            x1 = (a[1, 1] * b[0] - a[1, 0] * b[1]) / det
+            x2 = (-a[0, 1] * b[0] + a[0, 0] * b[1]) / det
+            return [x1, x2]
+
         try:
             L = np.linalg.cholesky(a)
             return sp.linalg.cho_solve(L, b)
