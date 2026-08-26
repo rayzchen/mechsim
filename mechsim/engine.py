@@ -1,4 +1,5 @@
 from mechsim.deriv import Variable, Literal, Term, Expression, Sum
+from collections import OrderedDict
 try:
     import ulab.numpy as np
     import ulab.scipy as sp
@@ -28,7 +29,9 @@ def euler_lagrange(lagrangian):
         term2 = lagrangian.differentiate(variable)
         eq = (term1 - term2).substitute({})
 
-        coeffs = {variable + "dotdot": [] for variable in Expression.context}
+        coeffs = OrderedDict()
+        for variable in Expression.context:
+            coeffs[variable + "dotdot"] = []
         coeffs[None] = []
         for term in eq.terms:
             name, term = split_variable(term)

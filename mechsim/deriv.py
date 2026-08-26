@@ -1,4 +1,5 @@
 import math
+from collections import OrderedDict
 
 def cartesian_product(*iterables):
     pools = [tuple(pool) for pool in iterables]
@@ -205,7 +206,7 @@ class Term(Expression):
 
         if variables:
             new_terms = [term for term in new_terms if term not in variables]
-            powers = {}
+            powers = OrderedDict()
             for term in variables:
                 if isinstance(term, Variable):
                     if term.name not in powers:
