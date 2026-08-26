@@ -1,5 +1,11 @@
 from mechsim.deriv import Variable, Literal, Term, Expression, Sum
-import numpy as np
+try:
+    import ulab.numpy as np
+    import ulab.scipy as sp
+    MICROPYTHON = True
+except ImportError:
+    import numpy as np
+    MICROPYTHON = False
 
 def split_variable(term):
     if isinstance(term, Variable) and term.name.endswith("dotdot"):
@@ -45,6 +51,14 @@ def display_equations(eqs):
         line += str(row[-1])
         print(line, "= 0")
 
+if MICROPYTHON:
+    def solve_system(a, b):
+        L = np.linalg.cholesky(a)
+        return sp.linalg.cho_solve(L, b)
+else:
+    def solve_system(a, b):
+        return np.linalg.solve(a, b)
+
 class Solver:
     def __init__(self, kinetic, potential):
         self.original = (kinetic, potential)
@@ -79,10 +93,11 @@ class Solver:
         matrix = np.zeros((self.degrees, self.degrees))
         constants = np.zeros((self.degrees,))
         for i in range(self.degrees):
-            for j in range(self.degrees):
+            for j in range(i, self.degrees):
                 matrix[i, j] = self.motion_eqs[i][j].evaluate(values)
+                matrix[j, i] = matrix[i, j]
             constants[i] = -self.motion_eqs[i][self.degrees].evaluate(values)
-        accelerations = np.linalg.solve(matrix, constants)
+        accelerations = solve_system(matrix, constants)
         return np.array([phase[1], accelerations])
 
     def step(self, dt):
