@@ -6,11 +6,18 @@
     <style>
         body {
             overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        #energy-label {
+            position: absolute;
+            top: 0.5em;
+            left: 1em;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas" width="800" height="500"></canvas>
+    <div id="energy-label"></div>
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");

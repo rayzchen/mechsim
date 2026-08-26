@@ -29,6 +29,10 @@ def update(timestamp):
     window.drawSystem(ffi.to_js(solver.get_params()))
     window.requestAnimationFrame(ffi.create_proxy(update))
 
+    t, v = solver.get_energies()
+    label.innerHTML = f"Kinetic: {t:.2f} | Potential: {v:.2f} | Total: {t + v:.2f}"
+
 if __name__ == "__main__":
-    from pyscript import window, ffi
+    from pyscript import window, ffi, web
+    label = web.page["#energy-label"]
     update(last)
