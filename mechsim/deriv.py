@@ -134,9 +134,9 @@ class Variable(Expression):
     def __str__(self):
         if Expression.latex_mode:
             if self.name.endswith("dotdot"):
-                return "\\ddot{" + format_variable(self.name[:-6]) + "}"
+                return f"\\ddot{{{format_variable(self.name[:-6])}}}"
             elif self.name.endswith("dot"):
-                return "\\dot{" + format_variable(self.name[:-3]) + "}"
+                return f"\\dot{{{format_variable(self.name[:-3])}}}"
         return format_variable(self.name)
 
     def key(self):
@@ -175,15 +175,15 @@ class Power(Expression):
         if Expression.latex_mode:
             if isinstance(self.base, Function):
                 if isinstance(self.base.arg, Term):
-                    return "\\" + self.base.name + "^{" + str(self.exponent) + "}\\left(" + str(self.base.arg) + "\\right)"
-                return "\\" + self.base.name + "^{" + str(self.exponent) + "}" + str(self.base.arg)
+                    return f"\\{self.base.name}^{{{self.exponent}}}\\left({self.base.arg}\\right)"
+                return f"\\{self.base.name}^{{{self.exponent}}}{self.base.arg}"
             if isinstance(self.base, Term):
-                return "\\left(" + str(self.base) + "\\right)^{" + str(self.exponent) + "}"
-            return str(self.base) + "^{" + str(self.exponent) + "}"
+                return f"\\left({self.base}\\right)^{{{self.exponent}}}"
+            return f"{self.base}^{{{self.exponent}}}"
 
         if isinstance(self.base, Term):
-            return "(" + str(self.base) + ")^" + str(self.exponent)
-        return str(self.base) + "^" + str(self.exponent)
+            return f"({self.base})^{self.exponent}"
+        return f"{self.base}^{self.exponent}"
 
     def key(self):
         return ("power", self.base.key(), self.exponent.key())
@@ -352,9 +352,10 @@ class Sum(Expression):
         return ("sum", tuple(sorted([term.key() for term in self.terms])))
 
     def __str__(self):
+        terms = " + ".join(map(str, self.terms)).replace("+ -", "- ")
         if Expression.latex_mode:
-            return "\\left(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + "\\right)"
-        return "(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + ")"
+            return f"\\left({terms}\\right)"
+        return f"({terms})"
 
     def contains(self, name):
         return any(term.contains(name) for term in self.terms)
@@ -446,9 +447,12 @@ class Function(Expression):
     def __str__(self):
         if Expression.latex_mode:
             if isinstance(self.arg, Term):
-                return "\\" + self.name + "\\left(" + str(self.arg) + "\\right)"
-            return "\\" + self.name + "{" + str(self.arg) + "}"
-        return self.name + "(" + str(self.arg) + ")"
+                return f"\\{self.name}\\left({self.arg}\\right)"
+            return f"\\{self.name}{{{self.arg}}}"
+
+        if isinstance(self.arg, Sum):
+            return f"{self.name}{self.arg}"
+        return f"{self.name}({self.arg})"
 
     def key(self):
         return (self.name, self.arg.key())

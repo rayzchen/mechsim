@@ -1,4 +1,4 @@
-from mechsim.deriv import Var, Sin, Cos, Literal, Expression
+from mechsim.deriv import Var, Sin, Cos, Literal, Expression, Sum
 
 def conv(value):
     if isinstance(value, (float, int)):
@@ -120,3 +120,19 @@ class Disk:
 
     def potential(self):
         return self.mass_var * Var("g") * self.com_position.y
+
+class System:
+    def __init__(self, *components):
+        self.kinetics = []
+        self.potentials = []
+        for component in components:
+            if hasattr(component, "kinetic"):
+                self.kinetics.append(component)
+            if hasattr(component, "potential"):
+                self.potentials.append(component)
+
+    def kinetic(self):
+        return Sum([compoent.kinetic() for compoent in self.kinetics])
+
+    def potential(self):
+        return Sum([compoent.potential() for compoent in self.potentials])
