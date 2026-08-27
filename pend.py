@@ -13,35 +13,6 @@ solver = Solver(kinetic, potential)
 solver.load_constants({"m1": 1, "m2": 1, "g": 10, "l1": 0.5, "l2": 0.5})
 solver.load_initial_values([2, 3.14])
 
-STEPS = 20
-dt = 1/60
-last = 0
-def update(timestamp):
-    global last
-    progress = min(timestamp / 1000 - last, dt)
-    last = timestamp / 1000
-
-    while progress > dt / STEPS:
-        progress -= dt / STEPS
-        solver.step(dt / STEPS)
-
-    window.drawSystem(ffi.to_js(solver.get_params()))
-    window.requestAnimationFrame(ffi.create_proxy(update))
-
-    t, v = solver.get_energies()
-    energy_label.innerHTML = f"Kinetic: {t:.2f} | Potential: {v:.2f} | Total: {t + v:.2f}"
-
 if __name__ == "__main__":
-    from pyscript import window, ffi, web
-
-    Expression.latex_mode = True
-    solver2 = Solver(*solver.original)
-    solver2.load_constants({})
-
-    latex = "\\begin{align*}"
-    latex += "\\\\".join(solver2.display_equations())
-    latex += "\\end{align*}"
-    window.setEquationlabel(latex)
-
-    energy_label = web.page["#energy-label"]
-    update(last)
+    from runner import load_solver
+    load_solver(solver)
