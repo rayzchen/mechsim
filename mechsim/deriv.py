@@ -7,7 +7,7 @@ if hasattr(float, "as_integer_ratio"):
 else:
     def get_fraction(value):
         differences = [1]
-        for i in range(1, 20):
+        for i in range(1, 26):
             top = value * i
             differences.append(abs(top - round(top)))
         bottom = differences.index(min(differences))
@@ -174,9 +174,11 @@ class Power(Expression):
     def __str__(self):
         if Expression.latex_mode:
             if isinstance(self.base, Function):
+                if isinstance(self.base.arg, Term):
+                    return "\\" + self.base.name + "^{" + str(self.exponent) + "}\\left(" + str(self.base.arg) + "\\right)"
                 return "\\" + self.base.name + "^{" + str(self.exponent) + "}" + str(self.base.arg)
             if isinstance(self.base, Term):
-                return "(" + str(self.base) + ")^{" + str(self.exponent) + "}"
+                return "\\left(" + str(self.base) + "\\right)^{" + str(self.exponent) + "}"
             return str(self.base) + "^{" + str(self.exponent) + "}"
 
         if isinstance(self.base, Term):
@@ -443,7 +445,9 @@ class Function(Expression):
 
     def __str__(self):
         if Expression.latex_mode:
-            return "\\" + self.name + str(self.arg)
+            if isinstance(self.arg, Term):
+                return "\\" + self.name + "\\left(" + str(self.arg) + "\\right)"
+            return "\\" + self.name + "{" + str(self.arg) + "}"
         return self.name + "(" + str(self.arg) + ")"
 
     def key(self):
