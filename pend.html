@@ -24,15 +24,37 @@
             top: 0;
             right: 1em;
         }
+        #symbols mjx-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas" width="800" height="500"></canvas>
     <div id="energy-label"></div>
     <div id="equation-label" style="display: none;"></div>
+    <div id="symbols" style="display: none;">\(\theta_1\) \(l_1\) \(m_1\) \(\theta_2\) \(l_2\) \(m_2\)</div>
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+        ctx.lineCap = "round";
+
+        let symbols = {};
+        const symbolContainer = document.getElementById("symbols");
+        const observer = new MutationObserver((list, observer) => {
+            console.log("observed");
+            const names = ["t1", "l1", "m1", "t2", "l2", "m2"];
+            const svgs = document.querySelectorAll("#symbols svg");
+            console.log(svgs);
+            if (svgs.length != names.length) return;
+            for (let i = 0; i < svgs.length; i++) {
+                symbols[names[i]] = svgs[i].parentElement;
+            }
+            observer.disconnect();
+        });
+        observer.observe(symbolContainer, {childList: true, subtree: true});
 
         function setEquationlabel(label) {
             const equationLabel = document.getElementById("equation-label");
@@ -43,6 +65,7 @@
         }
 
         function drawHinge() {
+            ctx.setLineDash([0, 0]);
             ctx.beginPath();
             ctx.arc(0, 0, 3, 0, 2 * Math.PI);
             ctx.lineWidth = 4;
@@ -52,6 +75,7 @@
         }
 
         function drawBar() {
+            ctx.setLineDash([0, 0]);
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.lineTo(0, 100);
@@ -67,34 +91,88 @@
             ctx.fill();
         }
 
+        function drawAxis() {
+            ctx.setLineDash([2.5, 2.5]);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, 50);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function drawAngle(angle) {
+            angle = (angle + Math.PI) % (2 * Math.PI) - Math.PI;
+            if (angle < -Math.PI) {
+                angle += 2 * Math.PI;
+            }
+            let start, end;
+            if (angle < 0) {
+                start = angle + Math.PI / 2;
+                end = Math.PI / 2;
+            } else {
+                start = Math.PI / 2;
+                end = angle + Math.PI / 2;
+            }
+            ctx.setLineDash([2.5, 2.5]);
+            ctx.beginPath();
+            ctx.arc(0, 0, 35, start, end);
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function moveLabel(name, x, y) {
+            if (symbols[name] != null) {
+                const point = new DOMPoint(x, y);
+                const matrix = ctx.getTransform();
+                let canvasPoint = matrix.transformPoint(point);
+                symbols[name].style.transform = "translate(" + canvasPoint.x + "px, " + canvasPoint.y + "px)";
+            }
+        }
+
         function drawSystem(params) {
             const theta1 = params[0];
             const theta2 = params[1];
             ctx.resetTransform();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.translate(canvas.width / 3, canvas.height / 2);
 
+            drawAxis();
+            drawAngle(-theta1);
+            moveLabel("t1", -15, -10);
             ctx.rotate(-theta1);
             drawBar();
             drawHinge();
-
+            moveLabel("l1", 20, 50);
             ctx.translate(0, 100);
-            drawMass();
-
             ctx.rotate(theta1);
+
+            drawMass();
+            moveLabel("m1", -30, -5);
+
+            drawAxis();
+            drawAngle(-theta2);
+            moveLabel("t2", 20, -10);
             ctx.rotate(-theta2);
             drawBar();
             drawHinge();
-
+            moveLabel("l2", -20, 50);
             ctx.translate(0, 100);
+            ctx.rotate(theta2);
+
             drawMass();
+            moveLabel("m2", 25, -5);
         }
 
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
-        window.addEventListener("load", resize);
+        window.addEventListener("load", () => {
+            resize();
+            MathJax.typesetPromise([symbolContainer]).then(() => {
+                symbolContainer.style.display = "block";
+            });
+        });
         window.addEventListener("resize", resize);
     </script>
     <script type="mpy" src="pend.py" config="mechsim-conf.json"></script>
