@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css" />
+    <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css">
     <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
     <script>
         window.MathJax = {
@@ -9,135 +9,15 @@
         };
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        #energy-label {
-            position: absolute;
-            top: 0.5em;
-            left: 1em;
-        }
-        #equation-label {
-            position: absolute;
-            top: 0;
-            right: 1em;
-        }
-        #symbols svg {
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body>
     <canvas id="canvas" width="800" height="500"></canvas>
     <div id="energy-label"></div>
     <div id="equation-label" style="display: none;"></div>
-    <div id="symbols" style="display: none;">\(\theta_1\) \(l_1\) \(m_1\) \(\theta_2\) \(l_2\) \(m_2\)</div>
+    <div id="symbols" style="display: none;"></div>
+    <script src="mechsim.js"></script>
     <script>
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        ctx.lineCap = "round";
-
-        let symbols = {};
-        const symbolContainer = document.getElementById("symbols");
-        const observer = new MutationObserver((list, observer) => {
-            console.log("observed");
-            const names = ["t1", "l1", "m1", "t2", "l2", "m2"];
-            const svgs = document.querySelectorAll("#symbols svg");
-            console.log(svgs);
-            if (svgs.length != names.length) return;
-
-            observer.disconnect();
-            for (let i = 0; i < svgs.length; i++) {
-                let container = svgs[i].parentElement;
-                symbols[names[i]] = svgs[i];
-                symbolContainer.appendChild(svgs[i]);
-                container.remove();
-                svgs[i].style.removeProperty("vertical-align");
-            }
-        });
-        observer.observe(symbolContainer, {childList: true, subtree: true});
-
-        function setEquationlabel(label) {
-            const equationLabel = document.getElementById("equation-label");
-            equationLabel.innerHTML = label;
-            MathJax.typesetPromise([equationLabel]).then(() => {
-                equationLabel.style.display = "block";
-            });
-        }
-
-        function drawHinge() {
-            ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.arc(0, 0, 3, 0, 2 * Math.PI);
-            ctx.lineWidth = 4;
-            ctx.stroke();
-            ctx.fillStyle = "white";
-            ctx.fill();
-        }
-
-        function drawBar() {
-            ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, 100);
-            ctx.lineWidth = 3;
-            ctx.stroke();
-        }
-
-        function drawMass() {
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.arc(0, 0, 10, 0, 2 * Math.PI);
-            ctx.fillStyle = "black";
-            ctx.fill();
-        }
-
-        function drawAxis() {
-            ctx.setLineDash([2.5, 2.5]);
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(0, 50);
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        function drawAngle(angle) {
-            angle = (angle + Math.PI) % (2 * Math.PI) - Math.PI;
-            if (angle < -Math.PI) {
-                angle += 2 * Math.PI;
-            }
-            let start, end;
-            if (angle < 0) {
-                start = angle + Math.PI / 2;
-                end = Math.PI / 2;
-            } else {
-                start = Math.PI / 2;
-                end = angle + Math.PI / 2;
-            }
-            ctx.setLineDash([2.5, 2.5]);
-            ctx.beginPath();
-            ctx.arc(0, 0, 35, start, end);
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        function moveLabel(name, x, y) {
-            if (symbols[name] != null) {
-                const point = new DOMPoint(x, y);
-                const matrix = ctx.getTransform();
-                let canvasPoint = matrix.transformPoint(point);
-                let x2 = "calc(" + canvasPoint.x + "px - 50%)";
-                let y2 = "calc(" + canvasPoint.y + "px - 50%)";
-                symbols[name].style.transform = "translate(" + x2 + ", " + y2 + ")";
-                symbolContainer.style.display = "block";
-            }
-        }
-
         function drawSystem(params) {
             const theta1 = params[0];
             const theta2 = params[1];
@@ -172,12 +52,7 @@
             moveLabel("m2", 25, 0);
         }
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener("load", resize);
-        window.addEventListener("resize", resize);
+        symbolContainer.innerText = `\(\theta_1\) \(l_1\) \(m_1\) \(\theta_2\) \(l_2\) \(m_2\)`;
     </script>
     <script type="mpy" src="pend.py" config="mechsim-conf.json"></script>
 </body>

@@ -1,0 +1,24 @@
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#energy-label {
+    position: absolute;
+    top: 0.5em;
+    left: 1em;
+}
+
+#equation-label {
+    position: absolute;
+    top: 0;
+    right: 1em;
+}
+
+#symbols svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
