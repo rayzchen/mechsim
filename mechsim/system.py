@@ -1,4 +1,4 @@
-from mechsim.deriv import Var, Sin, Cos, Literal
+from mechsim.deriv import Var, Sin, Cos, Literal, Expression
 
 def conv(value):
     if isinstance(value, (float, int)):
@@ -27,6 +27,11 @@ class Vector:
         if isinstance(other, Vector):
             return Vector(self.x - other.x, self.y - other.y)
         return NotImplemented
+    def __mul__(self, other):
+        other = conv(other)
+        if isinstance(other, Expression):
+            return Vector(self.x * other, self.y * other)
+        return NotImplemented
 
     def rotate(self, angle):
         x = self.x * Cos(angle) + self.y * Sin(angle)
@@ -51,11 +56,8 @@ class Mass:
         else:
             self.position = centre + axis
 
-    def constrain_horizontal(self, name, y=0):
-        self.position = Vector(Var(name), y)
-
-    def constrain_vertical(self, name, x=0):
-        self.position = Vector(x, Var(name))
+    def constrain_plane(self, name, plane_x, plane_y):
+        self.position = Vector(plane_x, plane_y) * Var(name)
 
     def kinetic(self):
         velocity = self.position.differentiate("t")
@@ -75,3 +77,44 @@ class Spring:
         distance2 = (self.point2 - self.point1).mag_squared()
         extension = distance2 ** 0.5 - self.length
         return 0.5 * self.stiffness * extension ** 2
+
+class Disk:
+    def __init__(self, mass, inertia, radius, com=None):
+        self.mass_var = Var(mass)
+        self.inertia_var = Var(inertia)
+        self.radius = conv(radius)
+        self.com = com
+        self.position = None
+        self.rotation = None
+
+    def set_com_position(self):
+        if self.com is not None:
+            self.com_position = self.position + self.com.rotate(self.rotation)
+        else:
+            self.com_position = self.position
+
+    def constrain_plane(self, name, plane_x, plane_y):
+        length_inv = (plane_x ** 2 + plane_y ** 2) ** -0.5
+        plane = Vector(plane_x, plane_y) * length_inv
+        normal = Vector(-plane_y, plane_x) * length_inv
+        self.position = normal * self.radius + plane * Var(name)
+        self.rotation = Var(name) * self.radius ** -1
+        self.set_com_position()
+
+    def constrain_circle(self, name, centre_x, centre_y, radius):
+        radius = conv(radius)
+        movement_radius = radius - self.radius
+        centre = Vector(centre_x, centre_y)
+        self.position = centre + Vector(0, -movement_radius).rotate(Var(name))
+        self.rotation = radius * Var(name) * self.radius ** -1
+        self.set_com_position()
+
+    def kinetic(self):
+        velocity = self.com_position.differentiate("t")
+        linear = 0.5 * self.mass_var * velocity.mag_squared()
+        angular_vel = self.rotation.differentiate("t")
+        angular = 0.5 * self.inertia_var * angular_vel ** 2
+        return linear + angular
+
+    def potential(self):
+        return self.mass_var * Var("g") * self.com_position.y
