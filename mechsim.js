@@ -83,17 +83,9 @@ function drawAngle(angle, radius) {
     if (angle < -Math.PI) {
         angle += 2 * Math.PI;
     }
-    let start, end;
-    if (angle < 0) {
-        start = angle + Math.PI / 2;
-        end = Math.PI / 2;
-    } else {
-        start = Math.PI / 2;
-        end = angle + Math.PI / 2;
-    }
     ctx.setLineDash([2.5, 2.5]);
     ctx.beginPath();
-    ctx.arc(0, 0, radius, start, end);
+    ctx.arc(0, 0, radius, angle + Math.PI / 2, Math.PI / 2, angle > 0);
     ctx.lineWidth = 2;
     ctx.stroke();
 }
