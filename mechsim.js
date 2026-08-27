@@ -6,7 +6,7 @@ let symbols = {
     names: [],
     latex: []
 };
-const symbolContainer = document.getElementById("symbols");
+const symbolContainer = document.getElementById("symbol-container");
 MathJax.startup = {
     ready() {
         MathJax.startup.defaultReady();
@@ -15,7 +15,7 @@ MathJax.startup = {
                 symbolContainer.innerText += "\\(" + symbol + "\\) ";
             }
             MathJax.typesetPromise([symbolContainer]).then(() => {
-                const svgs = document.querySelectorAll("#symbols svg");
+                const svgs = document.querySelectorAll("#symbol-container svg");
                 for (let i = 0; i < svgs.length; i++) {
                     let container = svgs[i].parentElement;
                     symbols[symbols.names[i]] = svgs[i];
@@ -23,6 +23,7 @@ MathJax.startup = {
                     container.remove();
                     svgs[i].style.removeProperty("vertical-align");
                 }
+                symbolContainer.classList.add("shown");
             });
         });
     }
@@ -32,7 +33,7 @@ function setEquationlabel(label) {
     const equationLabel = document.getElementById("equation-label");
     equationLabel.innerHTML = label;
     MathJax.typesetPromise([equationLabel]).then(() => {
-        equationLabel.style.display = "block";
+        equationLabel.classList.add("shown");
     });
 }
 

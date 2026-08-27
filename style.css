@@ -17,8 +17,25 @@ body {
     right: 1em;
 }
 
-#symbols svg {
+#symbol-container svg {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+.fade-in {
+    opacity: 0;
+}
+
+.fade-in.shown {
+    opacity: 1;
+    animation: fadein 1s;
+}
+
+#canvas {
+    animation: fadein 1s;
+}
+@keyframes fadein {
+    from { opacity: 0 }
+    to   { opacity: 1 }
 }
