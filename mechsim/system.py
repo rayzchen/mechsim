@@ -101,11 +101,14 @@ class Disk:
         self.rotation = Var(name) * self.radius ** -1
         self.set_com_position()
 
-    def constrain_circle(self, name, center, radius):
+    def constrain_circle(self, name, center, radius, circle_rotation=None):
+        if circle_rotation is None:
+            circle_rotation = Literal(0)
         radius = conv(radius)
         movement_radius = radius - self.radius
-        self.position = center + Vector(0, -movement_radius).rotate(Var(name))
-        self.rotation = radius * Var(name) * self.radius ** -1
+        self.position = center + Vector(0, -movement_radius).rotate(-Var(name))
+        angle = circle_rotation - (-Var(name))
+        self.rotation = circle_rotation + angle * movement_radius * self.radius ** -1
         self.set_com_position()
 
     def kinetic(self):

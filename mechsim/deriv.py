@@ -489,6 +489,5 @@ class Cos(Function):
 
     def substitute(self, values):
         if isinstance(self.arg, Term) and self.arg.coeff < 0:
-            print(self.arg)
             return Cos(Term(-self.arg.coeff, self.arg.terms)).substitute(values)
         return super(Cos, self).substitute(values)
