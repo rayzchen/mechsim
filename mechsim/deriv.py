@@ -478,6 +478,17 @@ class Sin(Function):
     def __init__(self, arg):
         super(Sin, self).__init__(arg, "sin", math.sin, Cos)
 
+    def substitute(self, values):
+        if isinstance(self.arg, Term) and self.arg.coeff < 0:
+            return -Sin(Term(-self.arg.coeff, self.arg.terms)).substitute(values)
+        return super(Sin, self).substitute(values)
+
 class Cos(Function):
     def __init__(self, arg):
         super(Cos, self).__init__(arg, "cos", math.cos, negative_wrapper(Sin))
+
+    def substitute(self, values):
+        if isinstance(self.arg, Term) and self.arg.coeff < 0:
+            print(self.arg)
+            return Cos(Term(-self.arg.coeff, self.arg.terms)).substitute(values)
+        return super(Cos, self).substitute(values)
