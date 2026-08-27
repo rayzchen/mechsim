@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css">
+    <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
+    <script>
+        window.MathJax = {
+            svg: {blacker: 5}
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+    <canvas id="canvas" width="800" height="500"></canvas>
+    <div id="energy-label"></div>
+    <div id="equation-label" class="fade-in"></div>
+    <div id="symbol-container" class="fade-in"></div>
+    <script src="mechsim.js"></script>
+    <script>
+        function drawSystem(params) {
+            const x = params[0];
+            const theta = params[1];
+            resetCanvas();
+            ctx.translate(0, 200);
+            drawPlane();
+
+            ctx.translate(x * 100, -200);
+            ctx.rotate(x / 2);
+            drawDisk(200);
+            moveLabel("m1", -10, 10);
+            moveLabel("i1", -80, -80);
+            moveLabel("r1", 100, -15);
+            ctx.rotate(-x / 2);
+
+            ctx.rotate(-theta);
+            ctx.translate(0, 150);
+            ctx.rotate(theta);
+
+            ctx.rotate(x / 2 + (theta + x / 2) * 3);
+            drawDisk(50);
+            moveLabel("m2", -10, 10);
+            moveLabel("i2", -20, -20);
+            moveLabel("r2", 25, -15);
+        }
+
+        symbols.names = ["m1", "r1", "i1", "m2", "r2", "i2"];
+        symbols.latex = ["m_1", "r_1", "I_1", "m_2", "r_2", "I_2"];
+    </script>
+    <script type="mpy" src="disk.py" config="mechsim-conf.json"></script>
+</body>
+</html>

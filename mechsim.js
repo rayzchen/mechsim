@@ -44,13 +44,7 @@ function resetCanvas() {
 }
 
 function drawHinge() {
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.arc(0, 0, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = "white";
-    ctx.fill();
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    drawCircle(4, 2);
 }
 
 function drawBar(length) {
@@ -99,8 +93,34 @@ function moveLabel(name, x, y) {
         let x2 = "calc(" + canvasPoint.x + "px - 50%)";
         let y2 = "calc(" + canvasPoint.y + "px - 50%)";
         symbols[name].style.transform = "translate(" + x2 + ", " + y2 + ")";
-        symbolContainer.style.display = "block";
     }
+}
+
+function drawPlane() {
+    length = Math.max(canvas.width, canvas.height);
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(-length, 0);
+    ctx.lineTo(length, 0);
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}
+
+function drawCircle(radius, width = 3) {
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.lineWidth = width;
+    ctx.stroke();
+}
+
+function drawDisk(radius) {
+    drawCircle(radius)
+    ctx.rotate(-Math.PI / 2);
+    drawAxis(radius);
+    ctx.rotate(Math.PI / 2);
 }
 
 function resize() {
