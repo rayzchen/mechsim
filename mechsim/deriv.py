@@ -172,10 +172,15 @@ class Power(Expression):
         self.exponent = exponent
 
     def __str__(self):
+        if Expression.latex_mode:
+            if isinstance(self.base, Function):
+                return "\\" + self.base.name + "^{" + str(self.exponent) + "}" + str(self.base.arg)
+            if isinstance(self.base, Term):
+                return "(" + str(self.base) + ")^{" + str(self.exponent) + "}"
+            return str(self.base) + "^{" + str(self.exponent) + "}"
+
         if isinstance(self.base, Term):
             return "(" + str(self.base) + ")^" + str(self.exponent)
-        elif isinstance(self.base, Function) and Expression.latex_mode:
-            return "\\" + self.base.name + "^{" + str(self.exponent) + "}" + str(self.base.arg)
         return str(self.base) + "^" + str(self.exponent)
 
     def key(self):
@@ -223,12 +228,11 @@ class Term(Expression):
         self.terms = terms
 
     def __str__(self):
-        if self.coeff == -1:
+        prefix = format_number(self.coeff)
+        if prefix == "-1":
             prefix = "-"
-        elif self.coeff == 1:
+        elif prefix == "1":
             prefix = ""
-        else:
-            prefix = format_number(self.coeff)
         return prefix + "".join(map(str, self.terms))
 
     def key(self):

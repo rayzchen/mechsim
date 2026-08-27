@@ -140,5 +140,5 @@ class Solver:
             if Expression.latex_mode:
                 line += "&"
             line += " = 0"
-            lines.append(line)
+            lines.append(line.replace("+ -", "- "))
         return lines
