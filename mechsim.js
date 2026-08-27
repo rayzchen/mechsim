@@ -2,25 +2,31 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 ctx.lineCap = "round";
 
-let symbols = {};
+let symbols = {
+    names: [],
+    latex: []
+};
 const symbolContainer = document.getElementById("symbols");
-const observer = new MutationObserver((list, observer) => {
-    console.log("observed");
-    const names = ["t1", "l1", "m1", "t2", "l2", "m2"];
-    const svgs = document.querySelectorAll("#symbols svg");
-    console.log(svgs);
-    if (svgs.length != names.length) return;
-
-    observer.disconnect();
-    for (let i = 0; i < svgs.length; i++) {
-        let container = svgs[i].parentElement;
-        symbols[names[i]] = svgs[i];
-        symbolContainer.appendChild(svgs[i]);
-        container.remove();
-        svgs[i].style.removeProperty("vertical-align");
+MathJax.startup = {
+    ready() {
+        MathJax.startup.defaultReady();
+        MathJax.startup.promise.then(() => {
+            for (const symbol of symbols.latex) {
+                symbolContainer.innerText += "\\(" + symbol + "\\) ";
+            }
+            MathJax.typesetPromise([symbolContainer]).then(() => {
+                const svgs = document.querySelectorAll("#symbols svg");
+                for (let i = 0; i < svgs.length; i++) {
+                    let container = svgs[i].parentElement;
+                    symbols[symbols.names[i]] = svgs[i];
+                    symbolContainer.appendChild(svgs[i]);
+                    container.remove();
+                    svgs[i].style.removeProperty("vertical-align");
+                }
+            });
+        });
     }
-});
-observer.observe(symbolContainer, {childList: true, subtree: true});
+}
 
 function setEquationlabel(label) {
     const equationLabel = document.getElementById("equation-label");
@@ -30,21 +36,27 @@ function setEquationlabel(label) {
     });
 }
 
+function resetCanvas() {
+    ctx.resetTransform();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(canvas.width / 3, canvas.height / 2);
+}
+
 function drawHinge() {
     ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.arc(0, 0, 3, 0, 2 * Math.PI);
-    ctx.lineWidth = 4;
-    ctx.stroke();
+    ctx.arc(0, 0, 4, 0, 2 * Math.PI);
     ctx.fillStyle = "white";
     ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.stroke();
 }
 
-function drawBar() {
+function drawBar(length) {
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(0, 100);
+    ctx.lineTo(0, length);
     ctx.lineWidth = 3;
     ctx.stroke();
 }
@@ -57,16 +69,16 @@ function drawMass() {
     ctx.fill();
 }
 
-function drawAxis() {
+function drawAxis(length) {
     ctx.setLineDash([2.5, 2.5]);
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.lineTo(0, 50);
+    ctx.lineTo(0, length);
     ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-function drawAngle(angle) {
+function drawAngle(angle, radius) {
     angle = (angle + Math.PI) % (2 * Math.PI) - Math.PI;
     if (angle < -Math.PI) {
         angle += 2 * Math.PI;
@@ -81,7 +93,7 @@ function drawAngle(angle) {
     }
     ctx.setLineDash([2.5, 2.5]);
     ctx.beginPath();
-    ctx.arc(0, 0, 35, start, end);
+    ctx.arc(0, 0, radius, start, end);
     ctx.lineWidth = 2;
     ctx.stroke();
 }
