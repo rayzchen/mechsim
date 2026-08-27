@@ -3,7 +3,12 @@
 <head>
     <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css" />
     <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            svg: {blacker: 5}
+        };
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
     <style>
         body {
             overflow: hidden;
@@ -16,7 +21,7 @@
         }
         #equation-label {
             position: absolute;
-            top: -0.5em;
+            top: 0;
             right: 1em;
         }
     </style>
@@ -24,10 +29,18 @@
 <body>
     <canvas id="canvas" width="800" height="500"></canvas>
     <div id="energy-label"></div>
-    <div id="equation-label"></div>
+    <div id="equation-label" style="display: none;"></div>
     <script>
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+
+        function setEquationlabel(label) {
+            const equationLabel = document.getElementById("equation-label");
+            equationLabel.innerHTML = label;
+            MathJax.typesetPromise([equationLabel]).then(() => {
+                equationLabel.style.display = "block";
+            });
+        }
 
         function drawHinge() {
             ctx.beginPath();

@@ -346,6 +346,8 @@ class Sum(Expression):
         return ("sum", tuple(sorted([term.key() for term in self.terms])))
 
     def __str__(self):
+        if Expression.latex_mode:
+            return "\\left(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + "\\right)"
         return "(" + " + ".join(map(str, self.terms)).replace("+ -", "- ") + ")"
 
     def contains(self, name):

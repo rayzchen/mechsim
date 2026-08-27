@@ -35,11 +35,14 @@ def update(timestamp):
 if __name__ == "__main__":
     from pyscript import window, ffi, web
 
-    equation_label = web.page["#equation-label"]
     Expression.latex_mode = True
-    for line in solver.display_equations():
-        equation_label.innerHTML += "$$" + line + "$$"
-    window.MathJax.typesetPromise(["#equation-label"])
+    solver2 = Solver(*solver.original)
+    solver2.load_constants({})
+
+    latex = "\\begin{align*}"
+    latex += "\\\\".join(solver2.display_equations())
+    latex += "\\end{align*}"
+    window.setEquationlabel(latex)
 
     energy_label = web.page["#energy-label"]
     update(last)

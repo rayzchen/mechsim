@@ -132,7 +132,13 @@ class Solver:
             line = ""
             for i in range(len(Expression.context)):
                 variable = str(Variable(Expression.context[i] + "dotdot"))
-                line += str(row[i]) + variable + " + "
-            line += str(row[-1]) + " = 0"
+                line += str(row[i]) + variable
+                if Expression.latex_mode:
+                    line += "&\\\\"
+                line += " + "
+            line += str(row[-1])
+            if Expression.latex_mode:
+                line += "&"
+            line += " = 0"
             lines.append(line)
         return lines
