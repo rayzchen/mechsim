@@ -1,5 +1,4 @@
-from mechsim.deriv import Expression, Var
-from mechsim.engine import Solver
+from mechsim import Expression, Var, Solver
 from mechsim.system import Mass, Vector
 
 Expression.context = ["theta1", "theta2"]
