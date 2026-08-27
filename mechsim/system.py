@@ -49,15 +49,15 @@ class Mass:
         self.mass_var = Var(name)
         self.position = None
 
-    def constrain_offset(self, name, offset, centre=None):
+    def constrain_offset(self, name, offset, center=None):
         axis = offset.rotate(Var(name))
-        if centre is None:
+        if center is None:
             self.position = axis
         else:
-            self.position = centre + axis
+            self.position = center + axis
 
-    def constrain_plane(self, name, plane_x, plane_y):
-        self.position = Vector(plane_x, plane_y) * Var(name)
+    def constrain_plane(self, name, plane):
+        self.position = plane * Var(name)
 
     def kinetic(self):
         velocity = self.position.differentiate("t")
@@ -93,19 +93,18 @@ class Disk:
         else:
             self.com_position = self.position
 
-    def constrain_plane(self, name, plane_x, plane_y):
-        length_inv = (plane_x ** 2 + plane_y ** 2) ** -0.5
-        plane = Vector(plane_x, plane_y) * length_inv
-        normal = Vector(-plane_y, plane_x) * length_inv
+    def constrain_plane(self, name, plane):
+        length_inv = plane.mag_squared() ** -0.5
+        plane = plane * length_inv
+        normal = Vector(-plane.y, plane.x)
         self.position = normal * self.radius + plane * Var(name)
         self.rotation = Var(name) * self.radius ** -1
         self.set_com_position()
 
-    def constrain_circle(self, name, centre_x, centre_y, radius):
+    def constrain_circle(self, name, center, radius):
         radius = conv(radius)
         movement_radius = radius - self.radius
-        centre = Vector(centre_x, centre_y)
-        self.position = centre + Vector(0, -movement_radius).rotate(Var(name))
+        self.position = center + Vector(0, -movement_radius).rotate(Var(name))
         self.rotation = radius * Var(name) * self.radius ** -1
         self.set_com_position()
 
