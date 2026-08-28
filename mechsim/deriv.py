@@ -127,6 +127,34 @@ class Literal(Expression):
     def deriv(self, respect):
         return Literal(0)
 
+class Constant(Expression):
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __str__(self):
+        if Expression.latex_mode:
+            return f"\\{self.name}"
+        else:
+            return self.name
+
+    def key(self):
+        return ("constant", self.name)
+
+    def contains(self, name):
+        return False
+
+    def substitute(self, values):
+        return self
+
+    def evaluate(self, values):
+        return self.value
+
+    def deriv(self, respect):
+        return Literal(0)
+
+Pi = Constant("pi", math.pi)
+
 class Variable(Expression):
     def __init__(self, name):
         self.name = name
