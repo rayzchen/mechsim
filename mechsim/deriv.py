@@ -30,14 +30,18 @@ def format_variable(name):
         return name
 
     subscript = ""
-    counter = 0
-    while counter < len(name):
-        if name[counter].isdigit():
-            break
-        counter += 1
-    if counter < len(name):
-        subscript = "_" + name[counter:]
-        name = name[:counter]
+    if "_" in name:
+        subscript = name[name.index("_"):]
+        name = name[:name.index("_")]
+    else:
+        counter = 0
+        while counter < len(name):
+            if name[counter].isdigit():
+                break
+            counter += 1
+        if counter < len(name):
+            subscript = "_" + name[counter:]
+            name = name[:counter]
     if len(name) > 1:
         name = "\\" + name
     return name + subscript
