@@ -87,9 +87,12 @@ class Disk:
         self.position = None
         self.rotation = None
 
+    def local(self, point):
+        return self.position + point.rotate(self.rotation)
+
     def set_com_position(self):
         if self.com is not None:
-            self.com_position = self.position + self.com.rotate(self.rotation)
+            self.com_position = self.local(self.com)
         else:
             self.com_position = self.position
 
