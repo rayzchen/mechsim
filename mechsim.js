@@ -47,12 +47,12 @@ function drawHinge() {
     drawCircle(4, 2);
 }
 
-function drawBar(length) {
+function drawBar(length, width = 3) {
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(0, 0);
     ctx.lineTo(0, length);
-    ctx.lineWidth = 3;
+    ctx.lineWidth = width;
     ctx.stroke();
 }
 
@@ -85,11 +85,34 @@ function drawAngle(angle, radius) {
     ctx.stroke();
 }
 
+function drawSpring(spring, hinge = false) {
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(spring.start.x, spring.start.y);
+    ctx.lineTo(spring.end.x, spring.end.y);
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    if (hinge) {
+        ctx.translate(spring.start.x, spring.start.y);
+        drawHinge();
+        ctx.translate(-spring.start.x, -spring.start.y);
+
+        ctx.translate(spring.end.x, spring.end.y);
+        drawHinge();
+        ctx.translate(-spring.end.x, -spring.end.y);
+    }
+}
+
+function getWorld(x, y) {
+    const point = new DOMPoint(x, y);
+    const matrix = ctx.getTransform();
+    return matrix.transformPoint(point);
+}
+
 function moveLabel(name, x, y) {
     if (symbols[name] != null) {
-        const point = new DOMPoint(x, y);
-        const matrix = ctx.getTransform();
-        let canvasPoint = matrix.transformPoint(point);
+        let canvasPoint = getWorld(x, y);
         let x2 = "calc(" + canvasPoint.x + "px - 50%)";
         let y2 = "calc(" + canvasPoint.y + "px - 50%)";
         symbols[name].style.transform = "translate(" + x2 + ", " + y2 + ")";
@@ -106,18 +129,28 @@ function drawPlane() {
     ctx.stroke();
 }
 
-function drawCircle(radius, width = 3) {
+function drawCircle(radius, fill = true, width = 3) {
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-    ctx.fillStyle = "white";
-    ctx.fill();
+    if (fill) {
+        ctx.fillStyle = "white";
+        ctx.fill();
+    }
     ctx.lineWidth = width;
     ctx.stroke();
 }
 
-function drawDisk(radius) {
-    drawCircle(radius)
+function drawSemi(radius, width = 3) {
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI);
+    ctx.lineWidth = width;
+    ctx.stroke();
+}
+
+function drawDisk(radius, fill = true, width = 3) {
+    drawCircle(radius, fill, width)
     ctx.rotate(-Math.PI / 2);
     drawAxis(radius);
     ctx.rotate(Math.PI / 2);

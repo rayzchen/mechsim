@@ -19,33 +19,86 @@
     <script src="mechsim.js"></script>
     <script>
         function drawSystem(params) {
-            const x = params[0];
-            const theta = params[1];
+            const scale = 600;
+            const x = params[0] * scale;
+            const theta1 = params[1];
+            const theta2 = params[2];
+            let spring1 = {};
+            let spring2 = {};
+            let spring3 = {};
+
+            const r_o = 0.3 * scale;
+            const r_i = 0.2 * scale;
+            const r = 0.075 * scale;
+            const w_p = 0.1 * scale;
+            const l_p = 0.3 * scale;
+            const d_s = 0.4 * scale;
+            const theta_s = Math.PI * (3 / 8);
+
             resetCanvas();
-            ctx.translate(0, 200);
+            ctx.translate(0, r_o / 2);
             drawPlane();
+            spring1.start = getWorld(-d_s, 0);
+            spring2.start = getWorld(d_s, 0);
+            ctx.translate(0, -r_o);
 
-            ctx.translate(x * 100, -200);
-            ctx.rotate(x / 2);
-            drawDisk(200);
-            moveLabel("m1", -10, 10);
-            moveLabel("i1", -80, -80);
-            moveLabel("r1", 100, -15);
-            ctx.rotate(-x / 2);
+            ctx.translate(x, 0);
+            ctx.rotate(x / r_o);
+            drawSemi(r_o);
+            drawSemi(r_i);
+            spring3.start = getWorld(0, (r_o + r_i) / 2);
 
-            ctx.rotate(-theta);
-            ctx.translate(0, 150);
-            ctx.rotate(theta);
+            drawAxis(r_o);
+            ctx.rotate(theta_s);
+            spring1.end = getWorld(0, r_o);
+            ctx.rotate(-2 * theta_s);
+            drawAxis(r_o);
+            spring2.end = getWorld(0, r_o);
+            ctx.rotate(theta_s);
 
-            ctx.rotate(x / 2 + (theta + x / 2) * 3);
-            drawDisk(50);
-            moveLabel("m2", -10, 10);
-            moveLabel("i2", -20, -20);
-            moveLabel("r2", 25, -15);
+            ctx.rotate(Math.PI / 2);
+            ctx.translate(0, -r_o);
+            drawBar(r_o - r_i);
+            ctx.translate(0, r_o + r_i);
+            drawBar(r_o - r_i);
+            ctx.translate(0, -r_i);
+            ctx.rotate(-Math.PI / 2);
+            ctx.rotate(-x / r_o);
+
+            ctx.rotate(-theta1);
+            ctx.translate(0, r_i - r);
+            spring3.end = getWorld(0, 0);
+            ctx.rotate(theta1);
+
+            moveLabel("mr", r * 1.5, -r * 1.5);
+            ctx.rotate(-0.77 * Math.PI);
+            drawBar(r * 1.8, 1);
+            ctx.rotate(0.77 * Math.PI)
+
+            ctx.rotate(x / r_o + (theta1 + x / r_o) * (r_i-r)/r);
+            drawDisk(r);
+            moveLabel("r", r / 2, -10);
+            ctx.rotate(-x / r_o - (theta1 + x / r_o) * (r_i-r)/r);
+
+            ctx.rotate(theta2);
+            drawBar(l_p);
+            drawHinge();
+            ctx.translate(0, l_p);
+            ctx.rotate(Math.PI / 2);
+            ctx.translate(0, -w_p / 2);
+            drawBar(w_p);
+            drawMass();
+            ctx.translate(0, w_p);
+            drawMass();
+
+            ctx.resetTransform();
+            drawSpring(spring1, true);
+            drawSpring(spring2, true);
+            drawSpring(spring3, true);
         }
 
-        symbols.names = ["m1", "r1", "i1", "m2", "r2", "i2"];
-        symbols.latex = ["m_1", "r_1", "I_1", "m_2", "r_2", "I_2"];
+        symbols.names = ["mr", "r"];
+        symbols.latex = ["m_r", "r"];
     </script>
     <script type="mpy" src="disk.py" config="mechsim-conf.json"></script>
 </body>
