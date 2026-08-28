@@ -202,6 +202,11 @@ class Power(Expression):
     def __str__(self):
         if Expression.latex_mode:
             if isinstance(self.base, Function):
+                if self.exponent.value == 0.5:
+                    base_text = str(self.base)
+                    if isinstance(self.base, Sum):
+                        base_text = base_text[6:-7]
+                    return f"\\sqrt{{{base_text}}}"
                 if isinstance(self.base.arg, Term):
                     return f"\\{self.base.name}^{{{self.exponent}}}\\left({self.base.arg}\\right)"
                 return f"\\{self.base.name}^{{{self.exponent}}}{self.base.arg}"
