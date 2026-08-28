@@ -3,9 +3,9 @@ from mechsim.system import Mass, Vector, System
 
 Expression.context = ["theta1", "theta2"]
 mass1 = Mass("m1")
-mass1.constrain_offset("theta1", Vector(0, -Var("l1")))
+mass1.constrain_hinge("theta1", Vector(0, -Var("l1")))
 mass2 = Mass("m2")
-mass2.constrain_offset("theta2", Vector(0, -Var("l2")), mass1.position)
+mass2.constrain_hinge("theta2", Vector(0, -Var("l2")), mass1.position)
 
 system = System(mass1, mass2)
 solver = Solver(system.kinetic(), system.potential())
