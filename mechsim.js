@@ -59,7 +59,7 @@ function drawBar(length, width = 3) {
 function drawMass() {
     ctx.beginPath();
     ctx.moveTo(0, 0);
-    ctx.arc(0, 0, 10, 0, 2 * Math.PI);
+    ctx.arc(0, 0, 15, 0, 2 * Math.PI);
     ctx.fillStyle = "black";
     ctx.fill();
 }
