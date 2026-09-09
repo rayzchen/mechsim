@@ -44,7 +44,8 @@ function resetCanvas() {
 }
 
 function drawHinge() {
-    drawCircle(4, 2);
+    drawCircle(4, "white", 2);
+    drawCircle(0.5, "black", 0);
 }
 
 function drawBar(length, width = 3) {
@@ -57,11 +58,7 @@ function drawBar(length, width = 3) {
 }
 
 function drawMass() {
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, 15, 0, 2 * Math.PI);
-    ctx.fillStyle = "black";
-    ctx.fill();
+    drawCircle(15, "black", 0);
 }
 
 function drawAxis(length) {
@@ -129,12 +126,12 @@ function drawPlane() {
     ctx.stroke();
 }
 
-function drawCircle(radius, fill = true, width = 3) {
+function drawCircle(radius, fill = "white", width = 3) {
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.arc(0, 0, radius, 0, 2 * Math.PI);
     if (fill) {
-        ctx.fillStyle = "white";
+        ctx.fillStyle = fill;
         ctx.fill();
     }
     ctx.lineWidth = width;
@@ -149,7 +146,7 @@ function drawSemi(radius, width = 3) {
     ctx.stroke();
 }
 
-function drawDisk(radius, fill = true, width = 3) {
+function drawDisk(radius, fill = "white", width = 3) {
     drawCircle(radius, fill, width)
     ctx.rotate(-Math.PI / 2);
     drawAxis(radius);
