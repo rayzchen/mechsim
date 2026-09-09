@@ -1,24 +1,52 @@
-const canvas = document.getElementById("canvas");
+const canvas = document.createElement("canvas");
+canvas.id = "canvas";
 const ctx = canvas.getContext("2d");
 ctx.lineCap = "round";
 
-let symbols = {
-    names: [],
-    latex: []
+const energyLabel = document.createElement("div");
+energyLabel.id = "energy-label";
+const symbolContainer = document.createElement("div");
+symbolContainer.id = "symbol-container";
+symbolContainer.classList.add("fade-in");
+const equationLabel = document.createElement("div");
+equationLabel.id = "equation-label";
+equationLabel.classList.add("fade-in");
+document.body.prepend(canvas, energyLabel, symbolContainer, equationLabel);
+
+const systemScript = document.createElement("script");
+systemScript.type = "mpy";
+systemScript.src = "system.py";
+systemScript.setAttribute("config", "../mechsim-conf.json");
+document.body.append(systemScript);
+
+MathJax = {
+    svg: {blacker: 5}
 };
-const symbolContainer = document.getElementById("symbol-container");
+
+let mechsim = {
+    title: "",
+    symbols: {
+        names: [],
+        latex: []
+    }
+}
+
+window.addEventListener("load", () => {
+    document.title = "MechSim: " + mechsim.title;
+});
+
 MathJax.startup = {
     ready() {
         MathJax.startup.defaultReady();
         MathJax.startup.promise.then(() => {
-            for (const symbol of symbols.latex) {
+            for (const symbol of mechsim.symbols.latex) {
                 symbolContainer.innerText += "\\(" + symbol + "\\) ";
             }
             MathJax.typesetPromise([symbolContainer]).then(() => {
-                const svgs = document.querySelectorAll("#symbol-container svg");
+                const svgs = symbolContainer.querySelectorAll("svg");
                 for (let i = 0; i < svgs.length; i++) {
                     let container = svgs[i].parentElement;
-                    symbols[symbols.names[i]] = svgs[i];
+                    mechsim.symbols[mechsim.symbols.names[i]] = svgs[i];
                     symbolContainer.appendChild(svgs[i]);
                     container.remove();
                     svgs[i].style.removeProperty("vertical-align");
@@ -30,7 +58,6 @@ MathJax.startup = {
 }
 
 function setEquationlabel(label) {
-    const equationLabel = document.getElementById("equation-label");
     equationLabel.innerHTML = label;
     MathJax.typesetPromise([equationLabel]).then(() => {
         equationLabel.classList.add("shown");
@@ -108,11 +135,11 @@ function getWorld(x, y) {
 }
 
 function moveLabel(name, x, y) {
-    if (symbols[name] != null) {
+    if (mechsim.symbols[name] != null) {
         let canvasPoint = getWorld(x, y);
         let x2 = "calc(" + canvasPoint.x + "px - 50%)";
         let y2 = "calc(" + canvasPoint.y + "px - 50%)";
-        symbols[name].style.transform = "translate(" + x2 + ", " + y2 + ")";
+        mechsim.symbols[name].style.transform = "translate(" + x2 + ", " + y2 + ")";
     }
 }
 

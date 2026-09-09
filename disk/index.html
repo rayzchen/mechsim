@@ -3,21 +3,16 @@
 <head>
     <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css">
     <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
-    <script>
-        window.MathJax = {
-            svg: {blacker: 5}
-        };
-    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
     <link rel="stylesheet" href="../style.css" type="text/css">
 </head>
 <body>
-    <canvas id="canvas" width="800" height="500"></canvas>
-    <div id="energy-label"></div>
-    <div id="equation-label" class="fade-in"></div>
-    <div id="symbol-container" class="fade-in"></div>
     <script src="../mechsim.js"></script>
     <script>
+        mechsim.title = "Rolling Disk Pendulum";
+        mechsim.symbols.names = ["mr", "r", "mp", "wp", "lp", "k", "m", "ro", "ri", "x"];
+        mechsim.symbols.latex = ["m_r", "r", "m_p", "w_p", "l_p", "k", "M", "R_o", "R_i", "x"];
+
         function drawSystem(params) {
             const scale = 600;
             const x = params[0] * scale;
@@ -148,10 +143,6 @@
             let mid_y = (spring1.start.y + spring1.end.y) / 2;
             moveLabel("k", mid_x + 15 * spring_y, mid_y - 15 * spring_x);
         }
-
-        symbols.names = ["mr", "r", "mp", "wp", "lp", "k", "m", "ro", "ri", "x"];
-        symbols.latex = ["m_r", "r", "m_p", "w_p", "l_p", "k", "M", "R_o", "R_i", "x"];
     </script>
-    <script type="mpy" src="disk.py" config="../mechsim-conf.json"></script>
 </body>
 </html>

@@ -3,21 +3,16 @@
 <head>
     <link rel="stylesheet" href="https://pyscript.net/releases/2026.7.3/core.css">
     <script type="module" src="https://pyscript.net/releases/2026.7.3/core.js"></script>
-    <script>
-        window.MathJax = {
-            svg: {blacker: 5}
-        };
-    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
     <link rel="stylesheet" href="../style.css" type="text/css">
 </head>
 <body>
-    <canvas id="canvas" width="800" height="500"></canvas>
-    <div id="energy-label"></div>
-    <div id="equation-label" class="fade-in"></div>
-    <div id="symbol-container" class="fade-in"></div>
     <script src="../mechsim.js"></script>
     <script>
+        mechsim.title = "Swinging Atwood Machine";
+        mechsim.symbols.names = ["m", "M", "r"];
+        mechsim.symbols.latex = ["m", "M", "r"];
+
         function drawSystem(params) {
             const scale = 150;
             const r = params[0];
@@ -62,10 +57,6 @@
             ctx.rotate(theta);
             moveLabel("m", 20, 20);
         }
-
-        symbols.names = ["m", "M", "r"];
-        symbols.latex = ["m", "M", "r"];
     </script>
-    <script type="mpy" src="atwood.py" config="../mechsim-conf.json"></script>
 </body>
 </html>
