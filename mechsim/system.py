@@ -99,12 +99,14 @@ class Disk:
         else:
             self.com_position = self.position
 
-    def constrain_plane(self, name, plane):
+    def constrain_plane(self, name, plane, offset=None):
         length_inv = plane.mag_squared() ** -0.5
         plane = plane * length_inv
         normal = Vector(-plane.y, plane.x)
         self.position = normal * self.radius + plane * Var(name)
         self.rotation = Var(name) * self.radius ** -1
+        if offset is not None:
+            self.position = offset + self.position
         self.set_com_position()
 
     def constrain_circle(self, name, center, radius, circle_rotation=None):
