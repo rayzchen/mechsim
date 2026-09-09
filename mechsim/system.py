@@ -56,8 +56,11 @@ class Mass:
         else:
             self.position = center + axis
 
-    def constrain_plane(self, name, plane):
-        self.position = plane * Var(name)
+    def constrain_plane(self, name, plane, offset=None):
+        if offset:
+            self.position = offset + plane * Var(name)
+        else:
+            self.position = plane * Var(name)
 
     def kinetic(self):
         velocity = self.position.differentiate("t")
