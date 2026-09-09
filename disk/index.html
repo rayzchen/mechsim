@@ -9,14 +9,14 @@
         };
     </script>
     <script defer src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-svg.js"></script>
-    <link rel="stylesheet" href="style.css" type="text/css">
+    <link rel="stylesheet" href="../style.css" type="text/css">
 </head>
 <body>
     <canvas id="canvas" width="800" height="500"></canvas>
     <div id="energy-label"></div>
     <div id="equation-label" class="fade-in"></div>
     <div id="symbol-container" class="fade-in"></div>
-    <script src="mechsim.js"></script>
+    <script src="../mechsim.js"></script>
     <script>
         function drawSystem(params) {
             const scale = 600;
@@ -152,6 +152,6 @@
         symbols.names = ["mr", "r", "mp", "wp", "lp", "k", "m", "ro", "ri", "x"];
         symbols.latex = ["m_r", "r", "m_p", "w_p", "l_p", "k", "M", "R_o", "R_i", "x"];
     </script>
-    <script type="mpy" src="disk.py" config="mechsim-conf.json"></script>
+    <script type="mpy" src="disk.py" config="../mechsim-conf.json"></script>
 </body>
 </html>
