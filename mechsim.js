@@ -11,7 +11,15 @@ symbolContainer.classList.add("fade-in");
 const equationLabel = document.createElement("div");
 equationLabel.id = "equation-label";
 equationLabel.classList.add("fade-in");
-document.body.prepend(canvas, energyLabel, symbolContainer, equationLabel);
+const simulationLabel = document.createElement("div");
+simulationLabel.id = "simulation-label";
+document.body.prepend(
+    canvas,
+    energyLabel,
+    symbolContainer,
+    equationLabel,
+    simulationLabel
+);
 
 const systemScript = document.createElement("script");
 systemScript.type = "mpy";
@@ -33,6 +41,7 @@ let mechsim = {
 
 window.addEventListener("load", () => {
     document.title = "MechSim: " + mechsim.title;
+    simulationLabel.textContent = mechsim.title;
 });
 
 MathJax.startup = {
@@ -40,7 +49,7 @@ MathJax.startup = {
         MathJax.startup.defaultReady();
         MathJax.startup.promise.then(() => {
             for (const symbol of mechsim.symbols.latex) {
-                symbolContainer.innerText += "\\(" + symbol + "\\) ";
+                symbolContainer.textContent += "\\(" + symbol + "\\) ";
             }
             MathJax.typesetPromise([symbolContainer]).then(() => {
                 const svgs = symbolContainer.querySelectorAll("svg");
@@ -58,7 +67,7 @@ MathJax.startup = {
 }
 
 function setEquationlabel(label) {
-    equationLabel.innerHTML = label;
+    equationLabel.textContent = label;
     MathJax.typesetPromise([equationLabel]).then(() => {
         equationLabel.classList.add("shown");
     });

@@ -23,6 +23,13 @@ body {
     left: 0;
 }
 
+#simulation-label {
+    position: absolute;
+    bottom: 0.5em;
+    right: 1em;
+    font-size: 2em;
+}
+
 .fade-in {
     opacity: 0;
 }
