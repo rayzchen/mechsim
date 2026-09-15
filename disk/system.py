@@ -14,8 +14,10 @@ mass2 = Mass("m_p")
 mass2.constrain_hinge("theta2", Vector(-0.5 * Var("w_p"), -Var("l_p")), disk.position)
 
 midrim = 0.5 * (Var("R_o") + Var("R_i"))
-spring1 = Spring(Vector(-Var("d_s"), -Var("R_o")), ring.local(Vector(0, -Var("R_o")).rotate(Var("theta_s"))), Var("l1"), Var("k"))
-spring2 = Spring(Vector(Var("d_s"), -Var("R_o")), ring.local(Vector(0, -Var("R_o")).rotate(-Var("theta_s"))), Var("l1"), Var("k"))
+end1 = ring.local(Vector(0, -Var("R_o")).rotate(Var("theta_s")))
+end2 = ring.local(Vector(0, -Var("R_o")).rotate(-Var("theta_s")))
+spring1 = Spring(Vector(-Var("d_s"), -Var("R_o")), end1, Var("l1"), Var("k"))
+spring2 = Spring(Vector(Var("d_s"), -Var("R_o")), end2, Var("l1"), Var("k"))
 spring3 = Spring(ring.local(Vector(0, -midrim)), disk.position, Var("l2"), Var("k2"))
 
 system = System(ring, disk, mass1, mass2, spring1, spring2, spring3)

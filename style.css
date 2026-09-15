@@ -30,19 +30,55 @@ body {
     font-size: 2em;
 }
 
+#system-modal {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#system-modal-content {
+    margin: 0 auto;
+    overflow: auto;
+    background-color: #CCC7;
+    backdrop-filter: blur(3px);
+    border: 1px solid grey;
+    border-radius: 10px;
+    padding: 0.25em 0.5em;
+    font-size: 1.25em;
+    max-height: 80vh;
+}
+
+#system-file {
+    margin: 0.5em 0;
+    font-family: monospace;
+    white-space: pre-wrap;
+}
+
+#modal-toggle {
+    position: absolute;
+    top: 2.5em;
+    left: 1em;
+}
+
 .fade-in {
     opacity: 0;
+    display: none;
+    transition-property: opacity, display;
+    transition-duration: 0.5s;
+    transition-behavior: allow-discrete;
 }
 
 .fade-in.shown {
     opacity: 1;
-    animation: fadein 1s;
+    display: block;
 }
 
-#canvas {
-    animation: fadein 1s;
-}
-@keyframes fadein {
-    from { opacity: 0 }
-    to   { opacity: 1 }
+@starting-style {
+    .fade-in.shown {
+        opacity: 0;
+    }
 }

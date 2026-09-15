@@ -13,13 +13,38 @@ equationLabel.id = "equation-label";
 equationLabel.classList.add("fade-in");
 const simulationLabel = document.createElement("div");
 simulationLabel.id = "simulation-label";
+
+const systemModal = document.createElement("div");
+systemModal.id = "system-modal";
+systemModal.innerHTML = `
+<div id="system-modal-content" class="fade-in">
+    <span>Contents of <code>system.py</code>:</span>
+    <div id="system-file"></div>
+</div>
+`;
+const modalToggle = document.createElement("button");
+modalToggle.id = "modal-toggle";
+modalToggle.textContent = "Show/hide system file";
+
 document.body.prepend(
     canvas,
     energyLabel,
     symbolContainer,
     equationLabel,
-    simulationLabel
+    simulationLabel,
+    systemModal,
+    modalToggle
 );
+
+const systemFile = document.getElementById("system-file");
+fetch("system.py")
+    .then((r) => r.text())
+    .then((text) => {systemFile.innerHTML = text;});
+
+const systemModalContent = document.getElementById("system-modal-content");
+modalToggle.addEventListener("click", () => {
+    systemModalContent.classList.toggle("shown");
+});
 
 const systemScript = document.createElement("script");
 systemScript.type = "mpy";
