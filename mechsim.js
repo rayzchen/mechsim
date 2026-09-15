@@ -42,9 +42,16 @@ fetch("system.py")
     .then((text) => {systemFile.innerHTML = text;});
 
 const systemModalContent = document.getElementById("system-modal-content");
-modalToggle.addEventListener("click", () => {
+const modalHandler = () => {
+    systemModal.classList.toggle("shown");
     systemModalContent.classList.toggle("shown");
+};
+systemModal.addEventListener("click", () => {
+    if (!systemModalContent.matches(":hover")) {
+        modalHandler();
+    }
 });
+modalToggle.addEventListener("click", modalHandler);
 
 const systemScript = document.createElement("script");
 systemScript.type = "mpy";

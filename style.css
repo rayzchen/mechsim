@@ -32,12 +32,20 @@ body {
 
 #system-modal {
     position: absolute;
-    display: flex;
+    display: none;
     align-items: center;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+
+    transition-property: display;
+    transition-duration: 0.5s;
+    transition-behavior: allow-discrete;
+}
+
+#system-modal.shown {
+    display: flex;
 }
 
 #system-modal-content {
