@@ -49,8 +49,11 @@ class Mass:
         self.mass_var = Var(name)
         self.position = None
 
-    def constrain_hinge(self, name, offset, center=None):
-        axis = offset.rotate(Var(name))
+    def constrain_hinge(self, name, offset, center=None, ccw=True):
+        if ccw:
+            axis = offset.rotate(-Var(name))
+        else:
+            axis = offset.rotate(Var(name))
         if center is None:
             self.position = axis
         else:
