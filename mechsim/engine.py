@@ -92,9 +92,10 @@ class Solver:
         self.time = 0
 
     def get_solver_values(self, phase, t):
-        values = {name: phase[0][i] for i, name in enumerate(self.context)}
-        values.update({name + "dot": phase[1][i] for i, name in enumerate(self.context)})
-        values["t"] = t
+        values = {"t": t}
+        for i, name in enumerate(self.context):
+            values[name] = phase[0][i]
+            values[name + "dot"] = phase[1][i]
         return values
 
     def gradient(self, phase, t):
