@@ -68,7 +68,7 @@ body {
 
 #modal-toggle {
     position: absolute;
-    top: 2.5em;
+    top: 3em;
     left: 1em;
 }
 
@@ -94,8 +94,8 @@ body {
 #energy-bar {
     position: absolute;
     left: 2em;
-    top: 15%;
-    bottom: 10%;
+    top: 20%;
+    bottom: 2em;
     width: 2em;
     background-color: #AAA;
     border: 2px solid black;
@@ -104,14 +104,13 @@ body {
 
 #kinetic-bar {
     width: 100%;
-    height: 50%;
     background-color: #EEE;
 }
 
 #energy-bar-label {
     position: absolute;
     left: 1em;
-    top: calc(15% - 2em);
+    top: calc(20% - 2em);
 }
 
 .color-label {
