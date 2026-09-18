@@ -90,3 +90,20 @@ body {
         opacity: 0;
     }
 }
+
+#energy-bar {
+    position: absolute;
+    left: 2em;
+    top: 15%;
+    bottom: 10%;
+    width: 2em;
+    background-color: #AAA;
+    border: 2px solid black;
+    overflow: hidden;
+}
+
+#kinetic-bar {
+    width: 100%;
+    height: 50%;
+    background-color: #EEE;
+}

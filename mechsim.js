@@ -26,6 +26,12 @@ const modalToggle = document.createElement("button");
 modalToggle.id = "modal-toggle";
 modalToggle.textContent = "Show/hide system file";
 
+const energyBar = document.createElement("div");
+energyBar.id = "energy-bar";
+const kineticBar = document.createElement("div");
+kineticBar.id = "kinetic-bar";
+energyBar.append(kineticBar);
+
 document.body.prepend(
     canvas,
     energyLabel,
@@ -33,7 +39,8 @@ document.body.prepend(
     equationLabel,
     simulationLabel,
     systemModal,
-    modalToggle
+    modalToggle,
+    energyBar
 );
 
 const systemFile = document.getElementById("system-file");
@@ -103,6 +110,15 @@ function setEquationlabel(label) {
     MathJax.typesetPromise([equationLabel]).then(() => {
         equationLabel.classList.add("shown");
     });
+}
+
+function setEnergyLabel(kinetic, potential) {
+    const t = kinetic.toFixed(2);
+    const v = potential.toFixed(2);
+    const tv = (kinetic + potential).toFixed(2);
+    energyLabel.textContent = `Kinetic: ${t} | Potential: ${v} | Total: ${tv}`;
+    console.log((t / tv * 100) + "%");
+    kineticBar.style.height = (t / tv * 100) + "%";
 }
 
 function resetCanvas() {

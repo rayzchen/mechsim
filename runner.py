@@ -20,7 +20,7 @@ def update(timestamp):
     window.requestAnimationFrame(ffi.create_proxy(update))
 
     t, v = main_solver.get_energies()
-    energy_label.textContent = f"Kinetic: {t:.2f} | Potential: {v:.2f} | Total: {t + v:.2f}"
+    window.setEnergyLabel(t, v)
 
 def load_solver(solver, custom_steps=None, render_equations=True):
     global main_solver, steps
