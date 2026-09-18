@@ -31,6 +31,14 @@ energyBar.id = "energy-bar";
 const kineticBar = document.createElement("div");
 kineticBar.id = "kinetic-bar";
 energyBar.append(kineticBar);
+const energyBarLabel = document.createElement("div");
+energyBarLabel.id = "energy-bar-label";
+energyBarLabel.innerHTML = `
+<div class="color-label" style="background-color: #EEE;"></div>
+Kinetic
+<div class="color-label" style="background-color: #AAA;"></div>
+Potential
+`;
 
 document.body.prepend(
     canvas,
@@ -40,7 +48,8 @@ document.body.prepend(
     simulationLabel,
     systemModal,
     modalToggle,
-    energyBar
+    energyBar,
+    energyBarLabel
 );
 
 const systemFile = document.getElementById("system-file");
