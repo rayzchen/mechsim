@@ -3,8 +3,9 @@ from mechsim.system import Vector, Disk, Mass, Spring, System
 import math
 
 Expression.context = ["x", "theta1", "theta2"]
-ring = Disk("M", "I_m", Var("R_o"), Vector(0, -0.56 * Var("R_o")))
-ring.constrain_plane("x", Vector(1, 0))
+com_height = 0.56 * Var("R_o")
+ring = Disk("M", "I_m", Var("R_o"), Vector(0, -com_height))
+ring.constrain_plane("x", Vector(1, 0), Vector(0, -0.5 * com_height))
 disk = Disk("m_r", "I_r", Var("r"))
 disk.constrain_circle("theta1", ring.position, Var("R_i"), ring.rotation)
 

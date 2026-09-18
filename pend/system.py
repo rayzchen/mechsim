@@ -3,7 +3,7 @@ from mechsim.system import Mass, Vector, System
 
 Expression.context = ["theta"]
 mass = Mass("m")
-mass.constrain_hinge("theta", Vector(0, -Var("l")))
+mass.constrain_hinge("theta", Vector(0, -Var("l")), Vector(0, Var("l")))
 
 system = System(mass)
 solver = Solver(system.kinetic(), system.potential())
