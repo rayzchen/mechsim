@@ -35,7 +35,7 @@ const energyBarLabel = document.createElement("div");
 energyBarLabel.id = "energy-bar-label";
 energyBarLabel.innerHTML = `
 <div class="color-label" style="background-color: #EEE;"></div>
-Kinetic
+Kinetic&nbsp;
 <div class="color-label" style="background-color: #AAA;"></div>
 Potential
 `;
