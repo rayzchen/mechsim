@@ -1,17 +1,14 @@
 import math
 from collections import OrderedDict
 
-if hasattr(float, "as_integer_ratio"):
-    def get_fraction(value):
-        return value.as_integer_ratio()
-else:
-    def get_fraction(value):
-        differences = [1]
-        for i in range(1, 26):
-            top = value * i
-            differences.append(abs(top - round(top)))
-        bottom = differences.index(min(differences))
-        return round(value * bottom), bottom
+denominator_limit = 100
+def get_fraction(value):
+    differences = [1]
+    for i in range(1, denominator_limit + 1):
+        top = value * i
+        differences.append(abs(top - round(top)))
+    bottom = differences.index(min(differences))
+    return round(value * bottom), bottom
 
 def format_number(value):
     if not Expression.latex_mode:
