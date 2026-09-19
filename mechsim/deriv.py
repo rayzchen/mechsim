@@ -271,7 +271,9 @@ class Term(Expression):
             prefix = ""
         return prefix + "".join(map(str, self.terms))
 
-    def key(self):
+    def key(self, coeff = True):
+        if coeff:
+            return ("term", self.coeff, tuple(sorted([term.key() for term in self.terms])))
         if len(self.terms) == 1:
             return self.terms[0].key()
         return ("term", tuple(sorted([term.key() for term in self.terms])))
@@ -413,6 +415,7 @@ class Sum(Expression):
             term_key = term.key()
             if isinstance(term, Term):
                 multiple = term.coeff
+                term_key = term.key(False)
             else:
                 multiple = 1
             if term_key not in keys:
