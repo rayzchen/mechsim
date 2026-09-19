@@ -40,6 +40,14 @@ Kinetic&nbsp;
 Potential
 `;
 
+const playbackContainer = document.createElement("div");
+playbackContainer.id = "playback-container";
+playbackContainer.innerHTML = `
+<img src="../icons/reset.svg" class="playback-button">
+<img src="../icons/pause.svg" class="playback-button">
+<img src="../icons/step.svg" class="playback-button">
+`;
+
 document.body.prepend(
     canvas,
     energyLabel,
@@ -49,7 +57,8 @@ document.body.prepend(
     systemModal,
     modalToggle,
     energyBar,
-    energyBarLabel
+    energyBarLabel,
+    playbackContainer
 );
 
 const systemFile = document.getElementById("system-file");
@@ -126,8 +135,20 @@ function setEnergyLabel(kinetic, potential) {
     const v = potential.toFixed(2);
     const tv = (kinetic + potential).toFixed(2);
     energyLabel.textContent = `Kinetic: ${t} | Potential: ${v} | Total: ${tv}`;
-    console.log((t / tv * 100) + "%");
     kineticBar.style.height = (t / tv * 100) + "%";
+}
+
+function setPlaybackButtons(reset, toggle, step) {
+    playbackContainer.children[0].addEventListener("click", () => reset());
+    playbackContainer.children[1].addEventListener("click", () => {
+        toggle();
+        if (playbackContainer.children[1].src.includes("pause")) {
+            playbackContainer.children[1].src = "../icons/play.svg";
+        } else {
+            playbackContainer.children[1].src = "../icons/pause.svg";
+        }
+    });
+    playbackContainer.children[2].addEventListener("click", () => step());
 }
 
 function resetCanvas() {

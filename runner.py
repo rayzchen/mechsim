@@ -62,5 +62,10 @@ def load_solver(solver, initial, custom_steps=None, render_equations=True):
         latex += "\\end{align*}"
         window.setEquationlabel(latex)
 
+    window.setPlaybackButtons(
+        ffi.to_js(reset_playback),
+        ffi.to_js(toggle_playback),
+        ffi.to_js(step_playback)
+    )
     solver.load_initial_values(initial)
     request_update()

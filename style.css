@@ -120,3 +120,17 @@ body {
     border: 2px solid black;
     margin-bottom: -2px;
 }
+
+#playback-container {
+    position: absolute;
+    right: 2em;
+    bottom: 4em;
+    display: flex;
+    gap: 0.5em;
+}
+
+.playback-button {
+    width: 1.5em;
+    height: 1.5em;
+    cursor: pointer;
+}
