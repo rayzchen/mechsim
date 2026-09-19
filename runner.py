@@ -1,8 +1,8 @@
 from mechsim import Expression, Solver
-from pyscript import window, ffi, web
+from pyscript import window, ffi
 
 main_solver = None
-energy_label = web.page["#energy-label"]
+main_initial = None
 
 steps = 20
 dt = 1/60
@@ -13,16 +13,16 @@ def update(timestamp):
     progress = min(timestamp / 1000 - last, dt + 1e-6)
     last = timestamp / 1000
 
-    if paused:
-        return
-
     while progress > dt / steps:
         progress -= dt / steps
         main_solver.step(dt / steps)
+    update_screen()
 
+    if not paused:
+        request_update()
+
+def update_screen():
     window.drawSystem(ffi.to_js(main_solver.get_params()))
-    request_update()
-
     t, v = main_solver.get_energies()
     window.setEnergyLabel(t, v)
 
@@ -39,9 +39,16 @@ def step_playback():
     if paused:
         request_update()
 
-def load_solver(solver, custom_steps=None, render_equations=True):
-    global main_solver, steps
+def reset_playback():
+    global paused
+    main_solver.load_initial_values(main_initial)
+    paused = True
+    update_screen()
+
+def load_solver(solver, initial, custom_steps=None, render_equations=True):
+    global main_solver, main_initial, steps
     main_solver = solver
+    main_initial = initial
     if custom_steps is not None:
         steps = custom_steps
 
@@ -55,4 +62,5 @@ def load_solver(solver, custom_steps=None, render_equations=True):
         latex += "\\end{align*}"
         window.setEquationlabel(latex)
 
+    solver.load_initial_values(initial)
     request_update()

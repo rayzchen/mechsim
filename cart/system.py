@@ -11,8 +11,7 @@ spring = Spring(Vector(-Var("d"), 0.5), cart.position, Var("d"), Var("k"))
 system = System(cart, pendulum, spring)
 solver = Solver(system.kinetic(), system.potential())
 solver.load_constants({"M": 1, "m": 1, "g": 10, "l": 1, "d": 1.5, "k": 6})
-solver.load_initial_values([-1, 0.5])
 
 if __name__ == "__main__":
     from runner import load_solver
-    load_solver(solver)
+    load_solver(solver, [-1, 0.5])

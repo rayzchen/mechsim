@@ -11,8 +11,7 @@ mass2.constrain_hinge("theta2", Vector(0, -Var("l2")), mass1.position)
 system = System(mass1, mass2)
 solver = Solver(system.kinetic(), system.potential())
 solver.load_constants({"m1": 1, "m2": 1, "g": 10, "l1": 0.5, "l2": 0.5})
-solver.load_initial_values([2, 3.14])
 
 if __name__ == "__main__":
     from runner import load_solver
-    load_solver(solver)
+    load_solver(solver, [2, 3.14])

@@ -31,8 +31,7 @@ solver.load_constants({
     "k": 400, "d_s": 0.4, "theta_s": math.pi * (3 / 8), "l1": 0.3,
     "k2": 400, "l2": 0.20
 })
-solver.load_initial_values([0.1, 0, 0])
 
 if __name__ == "__main__":
     from runner import load_solver
-    load_solver(solver, 2, False)
+    load_solver(solver, [0.1, 0, 0], 2, False)

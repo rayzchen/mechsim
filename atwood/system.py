@@ -13,8 +13,7 @@ solver = Solver(system.kinetic(), system.potential())
 solver.load_constants({
     "m": 1, "M": 5, "g": 10
 })
-solver.load_initial_values([1, math.pi / 2])
 
 if __name__ == "__main__":
     from runner import load_solver
-    load_solver(solver)
+    load_solver(solver, [1, math.pi / 2])
