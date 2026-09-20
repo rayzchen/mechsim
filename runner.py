@@ -34,6 +34,7 @@ def toggle_playback():
     paused = not paused
     if not paused:
         request_update()
+    return paused
 
 def step_playback():
     if paused:

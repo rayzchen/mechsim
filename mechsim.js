@@ -139,10 +139,12 @@ function setEnergyLabel(kinetic, potential) {
 }
 
 function setPlaybackButtons(reset, toggle, step) {
-    playbackContainer.children[0].addEventListener("click", () => reset());
+    playbackContainer.children[0].addEventListener("click", () => {
+        reset();
+        playbackContainer.children[1].src = "../icons/play.svg";
+    });
     playbackContainer.children[1].addEventListener("click", () => {
-        toggle();
-        if (playbackContainer.children[1].src.includes("pause")) {
+        if (toggle()) {
             playbackContainer.children[1].src = "../icons/play.svg";
         } else {
             playbackContainer.children[1].src = "../icons/pause.svg";
