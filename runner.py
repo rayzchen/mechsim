@@ -37,8 +37,9 @@ def toggle_playback():
     return paused
 
 def step_playback():
-    if paused:
-        request_update()
+    global paused
+    paused = True
+    request_update()
 
 def reset_playback():
     global paused

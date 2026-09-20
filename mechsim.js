@@ -150,7 +150,10 @@ function setPlaybackButtons(reset, toggle, step) {
             playbackContainer.children[1].src = "../icons/pause.svg";
         }
     });
-    playbackContainer.children[2].addEventListener("click", () => step());
+    playbackContainer.children[2].addEventListener("click", () => {
+        step();
+        playbackContainer.children[1].src = "../icons/play.svg";
+    });
 }
 
 function resetCanvas() {
